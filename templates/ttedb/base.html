@@ -1,0 +1,212 @@
+{% extends "xera_base.html" %}
+{% load static %}
+
+{% block title %}{% if page_title %}{{ page_title }} - {% endif %}TTEdb{% endblock %}
+
+{% block meta_description %}{% if page_description %}{{ page_description }}{% else %}TTEdb - Target Trial Emulation Database. Comprehensive database of target trial emulation studies and their concordance with randomized controlled trials.{% endif %}{% endblock %}
+
+{% block extra_css %}
+<!-- TTEdb-specific styles -->
+<link rel="stylesheet" href="{% static 'css/themes/ttedb-theme.css' %}">
+<style>
+/* TTEdb-specific styling */
+.ttedb-hero-section {
+    background: var(--ttedb-gradient-primary);
+    color: white;
+    padding: 4rem 0;
+    margin-bottom: 3rem;
+    border-radius: 0 0 2rem 2rem;
+}
+
+.ttedb-hero-content {
+    text-align: center;
+}
+
+.ttedb-hero-title {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.ttedb-hero-subtitle {
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+.ttedb-overview {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    margin-bottom: 3rem;
+}
+
+.ttedb-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.ttedb-stat-card {
+    background: var(--xera-primary-50);
+    border: 1px solid var(--xera-primary-200);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.ttedb-stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--xera-primary);
+    margin-bottom: 0.5rem;
+}
+
+.ttedb-stat-label {
+    color: var(--xera-primary-800);
+    font-weight: 500;
+}
+
+.ttedb-search-bar {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    margin-bottom: 2rem;
+}
+
+.ttedb-filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+}
+
+.ttedb-table {
+    background: white;
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.ttedb-table th {
+    background: var(--xera-primary-100);
+    color: var(--xera-primary-800);
+    font-weight: 600;
+    padding: 1rem;
+}
+
+.ttedb-table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--xera-primary-100);
+}
+
+.transparency-indicator {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+}
+
+.transparency-good {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.transparency-poor {
+    background: #fef2f2;
+    color: #991b1b;
+}
+
+.concordance-indicator {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+}
+
+.concordance-good {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.concordance-poor {
+    background: #fef2f2;
+    color: #991b1b;
+}
+
+.breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin-bottom: 1rem;
+}
+
+.breadcrumb-item a {
+    color: var(--xera-primary);
+    text-decoration: none;
+}
+
+.breadcrumb-item.active {
+    color: var(--xera-primary-600);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- TTEdb-specific JavaScript -->
+<script>
+// Add any TTEdb-specific JavaScript here
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize search functionality
+    const searchForm = document.querySelector('.ttedb-search-form');
+    if (searchForm) {
+        // Add search enhancements here
+    }
+});
+</script>
+{% endblock %}
+
+{% block header_nav %}
+<nav class="xera-nav">
+    <a href="{% url 'ttedb:home' %}" class="xera-nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+        <i class="fas fa-home me-1"></i>Home
+    </a>
+    <a href="{% url 'ttedb:tte_list' %}" class="xera-nav-link {% if 'tte' in request.resolver_match.url_name and 'vs-rct' not in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-flask me-1"></i>TTE Studies
+    </a>
+    <a href="{% url 'ttedb:tte_vs_rct' %}" class="xera-nav-link {% if 'tte_vs_rct' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-balance-scale me-1"></i>TTE vs RCT
+    </a>
+    <a href="{% url 'ttedb:learning_hub' %}" class="xera-nav-link {% if 'learning_hub' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-graduation-cap me-1"></i>Learning Hub
+    </a>
+    <a href="{% url 'ttedb:statistics' %}" class="xera-nav-link {% if 'statistics' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-chart-bar me-1"></i>Statistics
+    </a>
+    <a href="{% url 'ttedb:about' %}" class="xera-nav-link {% if 'about' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-info-circle me-1"></i>About
+    </a>
+    <a href="/api/" class="xera-nav-link" target="_blank">
+        <i class="fas fa-code me-1"></i>API
+    </a>
+</nav>
+{% endblock %}
+
+{% block app_logo %}
+<a href="{% url 'ttedb:home' %}" class="xera-logo">
+    <div class="xera-logo-icon">
+        <i class="fas fa-flask"></i>
+    </div>
+    <div class="xera-app-name">
+        <div class="xera-app-title">TTEdb</div>
+        <div class="xera-app-subtitle">Target Trial Emulation Database</div>
+    </div>
+</a>
+{% endblock %} 

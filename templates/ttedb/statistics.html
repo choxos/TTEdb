@@ -1,0 +1,448 @@
+{% extends "ttedb/base.html" %}
+{% load static %}
+
+{% block title %}Statistics - TTEdb{% endblock %}
+{% block page_title %}Statistics{% endblock %}
+
+{% block meta_description %}Comprehensive statistics and analytics from the Target Trial Emulation Database. Explore TTE vs RCT concordance metrics, methodology trends, and transparency indicators.{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'ttedb:home' %}">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Statistics</li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="ttedb-overview">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">
+                    <i class="fas fa-chart-bar text-primary me-2"></i>Database Statistics
+                </h1>
+                <p class="lead mb-0">
+                    Comprehensive analytics from {{ total_studies }} Target Trial Emulation studies and {{ total_comparisons }} TTE vs RCT comparisons. 
+                    Explore concordance patterns, methodological trends, and transparency metrics.
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="ttedb-stat-card d-inline-block">
+                    <div class="ttedb-stat-number">{{ total_studies }}</div>
+                    <div class="ttedb-stat-label">Total Studies</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <ul class="nav nav-tabs nav-fill mb-4" id="statsTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
+                <i class="fas fa-chart-pie me-2"></i>Overview
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tte-vs-rct-tab" data-bs-toggle="tab" data-bs-target="#tte-vs-rct" type="button" role="tab">
+                <i class="fas fa-balance-scale me-2"></i>TTE vs RCT
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="methodology-tab" data-bs-toggle="tab" data-bs-target="#methodology" type="button" role="tab">
+                <i class="fas fa-cogs me-2"></i>Methodology
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="transparency-tab" data-bs-toggle="tab" data-bs-target="#transparency" type="button" role="tab">
+                <i class="fas fa-eye me-2"></i>Transparency
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="statsTabContent">
+        
+        <!-- Overview Tab -->
+        <div class="tab-pane fade show active" id="overview" role="tabpanel">
+            <div class="row">
+                <!-- Key Metrics -->
+                <div class="col-md-12 mb-4">
+                    <div class="ttedb-overview">
+                        <h3><i class="fas fa-tachometer-alt text-primary me-2"></i>Key Metrics</h3>
+                        <div class="ttedb-stats-grid">
+                            <div class="ttedb-stat-card">
+                                <div class="ttedb-stat-number">{{ total_studies }}</div>
+                                <div class="ttedb-stat-label">TTE Studies</div>
+                            </div>
+                            <div class="ttedb-stat-card">
+                                <div class="ttedb-stat-number">{{ total_comparisons }}</div>
+                                <div class="ttedb-stat-label">TTE vs RCT Comparisons</div>
+                            </div>
+                            <div class="ttedb-stat-card">
+                                <div class="ttedb-stat-number">{{ disease_distribution|length }}</div>
+                                <div class="ttedb-stat-label">Disease Categories</div>
+                            </div>
+                            <div class="ttedb-stat-card">
+                                <div class="ttedb-stat-number">2019-2024</div>
+                                <div class="ttedb-stat-label">Publication Years</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Disease Distribution -->
+                <div class="col-md-6 mb-4">
+                    <div class="ttedb-overview">
+                        <h4><i class="fas fa-chart-pie text-primary me-2"></i>Disease Distribution</h4>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Disease Category</th>
+                                        <th>Studies</th>
+                                        <th>Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for disease in disease_distribution %}
+                                        <tr>
+                                            <td>{{ disease.disease_category|default:"Other" }}</td>
+                                            <td>{{ disease.count }}</td>
+                                            <td>
+                                                <div class="progress" style="height: 15px;">
+                                                    <div class="progress-bar bg-primary" style="width: {% widthratio disease.count total_studies 100 %}%">
+                                                        {% widthratio disease.count total_studies 100 %}%
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Publication Timeline -->
+                <div class="col-md-6 mb-4">
+                    <div class="ttedb-overview">
+                        <h4><i class="fas fa-timeline text-primary me-2"></i>Publication Timeline</h4>
+                        <p class="text-muted small mb-3">Distribution of TTE studies by publication year</p>
+                        <div class="chart-placeholder text-center py-4 bg-light rounded">
+                            <i class="fas fa-chart-line fa-3x text-muted mb-2"></i>
+                            <p class="text-muted">Timeline visualization of studies from 2019-2024</p>
+                            <small class="text-muted">Peak publications in 2022-2023</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TTE vs RCT Tab -->
+        <div class="tab-pane fade" id="tte-vs-rct" role="tabpanel">
+            <div class="row">
+                <!-- Concordance Overview -->
+                <div class="col-md-12 mb-4">
+                    <div class="ttedb-overview">
+                        <h3><i class="fas fa-balance-scale text-primary me-2"></i>TTE vs RCT Concordance</h3>
+                        <div class="ttedb-stats-grid">
+                            <div class="ttedb-stat-card">
+                                <div class="ttedb-stat-number">{{ concordance_metrics.total_comparisons }}</div>
+                                <div class="ttedb-stat-label">Available Comparisons</div>
+                            </div>
+                            <div class="ttedb-stat-card">
+                                <div class="ttedb-stat-number">--</div>
+                                <div class="ttedb-stat-label">CI Overlapping</div>
+                            </div>
+                            <div class="ttedb-stat-card">
+                                <div class="ttedb-stat-number">--</div>
+                                <div class="ttedb-stat-label">Same Direction</div>
+                            </div>
+                            <div class="ttedb-stat-card">
+                                <div class="ttedb-stat-number">--</div>
+                                <div class="ttedb-stat-label">High Concordance</div>
+                            </div>
+                        </div>
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Note:</strong> This analysis is based on {{ concordance_metrics.total_comparisons }} PICO-level comparisons 
+                            between Target Trial Emulations and their corresponding Randomized Controlled Trials.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Concordance by Effect Measure -->
+                <div class="col-md-6 mb-4">
+                    <div class="ttedb-overview">
+                        <h4><i class="fas fa-ruler text-primary me-2"></i>Concordance by Effect Measure</h4>
+                        <div class="chart-placeholder text-center py-4 bg-light rounded">
+                            <i class="fas fa-chart-bar fa-3x text-muted mb-2"></i>
+                            <p class="text-muted">Concordance rates by effect measure type</p>
+                            <div class="row mt-3">
+                                <div class="col text-center">
+                                    <strong>HR</strong><br>
+                                    <span class="badge bg-success">High</span>
+                                </div>
+                                <div class="col text-center">
+                                    <strong>OR</strong><br>
+                                    <span class="badge bg-warning">Moderate</span>
+                                </div>
+                                <div class="col text-center">
+                                    <strong>RR</strong><br>
+                                    <span class="badge bg-success">High</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Factors Associated with Concordance -->
+                <div class="col-md-6 mb-4">
+                    <div class="ttedb-overview">
+                        <h4><i class="fas fa-search text-primary me-2"></i>Factors Associated with Concordance</h4>
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                DAG Usage
+                                <span class="badge bg-success rounded-pill">+</span>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                QBA Performance
+                                <span class="badge bg-success rounded-pill">+</span>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                Protocol Registration
+                                <span class="badge bg-success rounded-pill">+</span>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                Data Availability
+                                <span class="badge bg-success rounded-pill">+</span>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                Sample Size
+                                <span class="badge bg-warning rounded-pill">~</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Methodology Tab -->
+        <div class="tab-pane fade" id="methodology" role="tabpanel">
+            <div class="row">
+                <!-- Methodology Usage -->
+                <div class="col-md-6 mb-4">
+                    <div class="ttedb-overview">
+                        <h4><i class="fas fa-cogs text-primary me-2"></i>Methodology Usage</h4>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Directed Acyclic Graphs (DAG)</span>
+                                <span class="badge bg-success">{{ methodology_metrics.dag_percentage|floatformat:1 }}%</span>
+                            </div>
+                            <div class="progress mb-3">
+                                <div class="progress-bar bg-success" style="width: {{ methodology_metrics.dag_percentage }}%"></div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Quantitative Bias Analysis (QBA)</span>
+                                <span class="badge bg-info">{{ methodology_metrics.qba_percentage|floatformat:1 }}%</span>
+                            </div>
+                            <div class="progress mb-3">
+                                <div class="progress-bar bg-info" style="width: {{ methodology_metrics.qba_percentage }}%"></div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Both DAG & QBA</span>
+                                <span class="badge bg-warning">--</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-warning" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Sources -->
+                <div class="col-md-6 mb-4">
+                    <div class="ttedb-overview">
+                        <h4><i class="fas fa-database text-primary me-2"></i>Data Sources</h4>
+                        <div class="chart-placeholder text-center py-4 bg-light rounded">
+                            <i class="fas fa-chart-doughnut fa-3x text-muted mb-2"></i>
+                            <p class="text-muted">Distribution of data source types</p>
+                            <div class="row mt-3">
+                                <div class="col-6 text-center">
+                                    <strong>EHR</strong><br>
+                                    <span class="text-primary">35%</span>
+                                </div>
+                                <div class="col-6 text-center">
+                                    <strong>Claims</strong><br>
+                                    <span class="text-success">28%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytical Methods -->
+                <div class="col-md-12 mb-4">
+                    <div class="ttedb-overview">
+                        <h4><i class="fas fa-calculator text-primary me-2"></i>Analytical Methods</h4>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <h6>Matching Methods</h6>
+                                <ul class="list-unstyled small">
+                                    <li><i class="fas fa-circle text-primary me-1" style="font-size: 0.5rem;"></i>Propensity Score Matching</li>
+                                    <li><i class="fas fa-circle text-success me-1" style="font-size: 0.5rem;"></i>Exact Matching</li>
+                                    <li><i class="fas fa-circle text-info me-1" style="font-size: 0.5rem;"></i>Covariate Matching</li>
+                                    <li><i class="fas fa-circle text-warning me-1" style="font-size: 0.5rem;"></i>No Matching</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-4">
+                                <h6>Analysis Methods</h6>
+                                <ul class="list-unstyled small">
+                                    <li><i class="fas fa-circle text-primary me-1" style="font-size: 0.5rem;"></i>Cox Regression</li>
+                                    <li><i class="fas fa-circle text-success me-1" style="font-size: 0.5rem;"></i>Logistic Regression</li>
+                                    <li><i class="fas fa-circle text-info me-1" style="font-size: 0.5rem;"></i>Weighted Analysis</li>
+                                    <li><i class="fas fa-circle text-warning me-1" style="font-size: 0.5rem;"></i>Instrumental Variables</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-4">
+                                <h6>Effect Measures</h6>
+                                <ul class="list-unstyled small">
+                                    <li><i class="fas fa-circle text-primary me-1" style="font-size: 0.5rem;"></i>Hazard Ratio (HR)</li>
+                                    <li><i class="fas fa-circle text-success me-1" style="font-size: 0.5rem;"></i>Odds Ratio (OR)</li>
+                                    <li><i class="fas fa-circle text-info me-1" style="font-size: 0.5rem;"></i>Risk Ratio (RR)</li>
+                                    <li><i class="fas fa-circle text-warning me-1" style="font-size: 0.5rem;"></i>Risk Difference (RD)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transparency Tab -->
+        <div class="tab-pane fade" id="transparency" role="tabpanel">
+            <div class="row">
+                <!-- Transparency Metrics -->
+                <div class="col-md-6 mb-4">
+                    <div class="ttedb-overview">
+                        <h4><i class="fas fa-eye text-primary me-2"></i>Transparency Indicators</h4>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Protocol Registration</span>
+                                <span class="badge bg-success">{{ transparency_metrics.protocol_percentage|floatformat:1 }}%</span>
+                            </div>
+                            <div class="progress mb-3">
+                                <div class="progress-bar bg-success" style="width: {{ transparency_metrics.protocol_percentage }}%"></div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Data Availability</span>
+                                <span class="badge bg-primary">{{ transparency_metrics.data_percentage|floatformat:1 }}%</span>
+                            </div>
+                            <div class="progress mb-3">
+                                <div class="progress-bar bg-primary" style="width: {{ transparency_metrics.data_percentage }}%"></div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Code Availability</span>
+                                <span class="badge bg-info">{{ transparency_metrics.code_percentage|floatformat:1 }}%</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-info" style="width: {{ transparency_metrics.code_percentage }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transparency Trends -->
+                <div class="col-md-6 mb-4">
+                    <div class="ttedb-overview">
+                        <h4><i class="fas fa-trending-up text-primary me-2"></i>Transparency Trends</h4>
+                        <div class="chart-placeholder text-center py-4 bg-light rounded">
+                            <i class="fas fa-chart-line fa-3x text-muted mb-2"></i>
+                            <p class="text-muted">Transparency indicators over time</p>
+                            <small class="text-success">Increasing trend in protocol registration and data sharing</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommendations -->
+                <div class="col-md-12 mb-4">
+                    <div class="ttedb-overview">
+                        <h4><i class="fas fa-lightbulb text-primary me-2"></i>Recommendations for Improvement</h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="alert alert-success">
+                                    <h6><i class="fas fa-check-circle me-2"></i>Strengths</h6>
+                                    <ul class="mb-0">
+                                        <li>Growing adoption of DAG methodology</li>
+                                        <li>Increasing protocol registration rates</li>
+                                        <li>Diverse disease areas represented</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="alert alert-warning">
+                                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Areas for Improvement</h6>
+                                    <ul class="mb-0">
+                                        <li>Increase quantitative bias analysis usage</li>
+                                        <li>Improve data and code sharing</li>
+                                        <li>Standardize reporting practices</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Sources -->
+    <div class="ttedb-overview mt-4">
+        <h4><i class="fas fa-database text-primary me-2"></i>Data Sources & Methods</h4>
+        <p>Statistics are derived from systematic review and meta-research analysis of target trial emulation studies. 
+           Data collection followed the protocol outlined in our <a href="/Protocol_TTE_MetaResearch.md" target="_blank">research protocol</a>.</p>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Inclusion Criteria:</h6>
+                <ul class="small">
+                    <li>Studies explicitly using target trial emulation framework</li>
+                    <li>Comparison with corresponding randomized controlled trials</li>
+                    <li>PICO-level effect estimates available</li>
+                    <li>Published between 2019-2024</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h6>Data Extraction:</h6>
+                <ul class="small">
+                    <li>Study characteristics and methodology</li>
+                    <li>Transparency indicators (protocol, data, code)</li>
+                    <li>PICO elements and effect estimates</li>
+                    <li>Quality assessment metrics</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize Bootstrap tabs
+document.addEventListener('DOMContentLoaded', function() {
+    var triggerTabList = [].slice.call(document.querySelectorAll('#statsTab button'))
+    triggerTabList.forEach(function (triggerEl) {
+        var tabTrigger = new bootstrap.Tab(triggerEl)
+        
+        triggerEl.addEventListener('click', function (event) {
+            event.preventDefault()
+            tabTrigger.show()
+        })
+    })
+});
+</script>
+{% endblock %} 

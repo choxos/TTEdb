@@ -1,0 +1,343 @@
+{% extends "ttedb/base.html" %}
+{% load static %}
+
+{% block title %}TTE vs RCT - TTEdb{% endblock %}
+{% block page_title %}TTE vs RCT{% endblock %}
+
+{% block meta_description %}Explore Target Trial Emulation studies that compared their results with randomized controlled trials. Analyze concordance patterns and methodological factors.{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'ttedb:home' %}">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">TTE vs RCT</li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="ttedb-overview">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">
+                    <i class="fas fa-balance-scale text-primary me-2"></i>TTE vs RCT Comparisons
+                </h1>
+                <p class="lead mb-0">
+                    Studies that directly compared Target Trial Emulation results with their corresponding Randomized Controlled Trials. 
+                    Explore {{ studies.paginator.count }} comparative studies examining concordance patterns.
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="ttedb-stat-card d-inline-block">
+                    <div class="ttedb-stat-number">{{ studies.paginator.count }}</div>
+                    <div class="ttedb-stat-label">Comparative Studies</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="ttedb-search-bar">
+        <form method="get" class="ttedb-search-form">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" name="q" value="{{ query }}" 
+                               placeholder="Search by author, target trial, outcome...">
+                        <button class="btn btn-primary" type="submit">Search</button>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="ttedb-filter-group">
+                        <select name="target_trial" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Target Trials</option>
+                            {% for trial in target_trials %}
+                                {% if trial %}
+                                    <option value="{{ trial }}" {% if request.GET.target_trial == trial %}selected{% endif %}>
+                                        {{ trial|truncatechars:40 }}
+                                    </option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <select name="effect_measure" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Effect Measures</option>
+                        {% for measure in effect_measures %}
+                            <option value="{{ measure }}" {% if request.GET.effect_measure == measure %}selected{% endif %}>
+                                {{ measure }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select name="disease_category" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Disease Categories</option>
+                        {% for category in disease_categories %}
+                            <option value="{{ category }}" {% if request.GET.disease_category == category %}selected{% endif %}>
+                                {{ category }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select name="concordance" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Concordance Levels</option>
+                        <option value="high" {% if request.GET.concordance == "high" %}selected{% endif %}>High Concordance</option>
+                        <option value="moderate" {% if request.GET.concordance == "moderate" %}selected{% endif %}>Moderate Concordance</option>
+                        <option value="low" {% if request.GET.concordance == "low" %}selected{% endif %}>Low Concordance</option>
+                    </select>
+                </div>
+            </div>
+
+            {% if query or request.GET.target_trial or request.GET.effect_measure or request.GET.disease_category or request.GET.concordance %}
+                <div class="mt-3">
+                    <a href="{% url 'ttedb:tte_vs_rct' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-times me-1"></i>Clear Filters
+                    </a>
+                </div>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Results -->
+    <div class="ttedb-table">
+        {% if studies %}
+            {% for study in studies %}
+                <div class="ttedb-overview mb-4">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h4 class="mb-2">
+                                <a href="{% url 'ttedb:tte_detail' study.slug %}" class="text-decoration-none">
+                                    {{ study.first_author }} ({{ study.year }})
+                                </a>
+                            </h4>
+                            <p class="mb-2">
+                                <strong>Disease:</strong> {{ study.disease }} ({{ study.disease_category }})
+                                <br>
+                                <strong>Data:</strong> {{ study.data_type|title }} from {{ study.data_geography }}
+                                {% if study.total_sample_size %}
+                                    <br><strong>Sample Size:</strong> {{ study.total_sample_size|floatformat:0 }} 
+                                    (Treatment: {{ study.n_trt|default:"NR" }}, Control: {{ study.n_ctrl|default:"NR" }})
+                                {% endif %}
+                            </p>
+                            
+                            <!-- Methodology badges -->
+                            <div class="d-flex flex-wrap gap-1 mb-3">
+                                {% if study.dag %}
+                                    <span class="badge bg-success">DAG</span>
+                                {% endif %}
+                                {% if study.qba %}
+                                    <span class="badge bg-info">QBA</span>
+                                {% endif %}
+                                {% if study.matching_method %}
+                                    <span class="badge bg-secondary">{{ study.matching_method }}</span>
+                                {% endif %}
+                                {% if study.analysis_method %}
+                                    <span class="badge bg-primary">{{ study.analysis_method|truncatechars:15 }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <!-- Transparency indicators -->
+                            {% if study.has_transparency_indicators %}
+                                <span class="transparency-indicator transparency-good mb-2">
+                                    <i class="fas fa-check-circle me-1"></i>High Transparency
+                                </span>
+                            {% else %}
+                                <span class="transparency-indicator transparency-poor mb-2">
+                                    <i class="fas fa-exclamation-circle me-1"></i>Low Transparency
+                                </span>
+                            {% endif %}
+                            
+                            <div class="mt-2">
+                                {% if study.protocol %}
+                                    <small class="text-success d-block"><i class="fas fa-file-contract me-1"></i>Protocol Available</small>
+                                {% endif %}
+                                {% if study.data_url %}
+                                    <small class="text-primary d-block"><i class="fas fa-database me-1"></i>Data Available</small>
+                                {% endif %}
+                                {% if study.code_url %}
+                                    <small class="text-info d-block"><i class="fas fa-code me-1"></i>Code Available</small>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="btn-group mt-3">
+                                <a href="{% url 'ttedb:tte_detail' study.slug %}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-eye me-1"></i>View Details
+                                </a>
+                                {% if study.doi %}
+                                    <a href="{{ study.doi }}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                                        <i class="fas fa-external-link-alt me-1"></i>Paper
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PICO Comparisons -->
+                    {% if study.pico_comparisons.all %}
+                        <hr class="my-3">
+                        <h5><i class="fas fa-balance-scale text-primary me-2"></i>TTE vs RCT Comparisons</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Target Trial</th>
+                                        <th>Outcome</th>
+                                        <th>Effect Measure</th>
+                                        <th>RCT Result</th>
+                                        <th>TTE Result</th>
+                                        <th>Concordance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for pico in study.pico_comparisons.all %}
+                                        <tr>
+                                            <td>
+                                                <small>{{ pico.target_trial_name|truncatechars:30 }}</small>
+                                            </td>
+                                            <td>
+                                                <small>{{ pico.outcome|truncatechars:40 }}</small>
+                                                {% if pico.outcome_type == 'safety' %}
+                                                    <span class="badge bg-warning text-dark">Safety</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">Efficacy</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-light text-dark">{{ pico.effect_measure }}</span>
+                                            </td>
+                                            <td>
+                                                {% if pico.rct_estimate %}
+                                                    <strong>{{ pico.rct_estimate|floatformat:2 }}</strong>
+                                                    <br><small class="text-muted">{{ pico.rct_ci_string }}</small>
+                                                {% else %}
+                                                    <span class="text-muted">Not available</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if pico.tte_estimate %}
+                                                    <strong>{{ pico.tte_estimate|floatformat:2 }}</strong>
+                                                    <br><small class="text-muted">{{ pico.tte_ci_string }}</small>
+                                                {% else %}
+                                                    <span class="text-muted">Not available</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if pico.rct_estimate and pico.tte_estimate %}
+                                                    {% if pico.estimates_overlap %}
+                                                        <span class="concordance-indicator concordance-good">
+                                                            <i class="fas fa-check me-1"></i>CI Overlap
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="concordance-indicator concordance-poor">
+                                                            <i class="fas fa-times me-1"></i>No Overlap
+                                                        </span>
+                                                    {% endif %}
+                                                    <br>
+                                                    {% if pico.concordance_direction %}
+                                                        <small class="text-success"><i class="fas fa-arrow-right me-1"></i>Same Direction</small>
+                                                    {% else %}
+                                                        <small class="text-warning"><i class="fas fa-exchange-alt me-1"></i>Different Direction</small>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="text-muted">Cannot assess</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <!-- Pagination -->
+            {% if studies.has_other_pages %}
+                <nav aria-label="Studies pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if studies.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% if query %}q={{ query }}&{% endif %}{% if request.GET.target_trial %}target_trial={{ request.GET.target_trial }}&{% endif %}{% if request.GET.effect_measure %}effect_measure={{ request.GET.effect_measure }}&{% endif %}{% if request.GET.disease_category %}disease_category={{ request.GET.disease_category }}&{% endif %}page={{ studies.previous_page_number }}">
+                                    <i class="fas fa-chevron-left"></i> Previous
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for page_num in studies.paginator.page_range %}
+                            {% if page_num == studies.number %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                            {% elif page_num > studies.number|add:'-3' and page_num < studies.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if query %}q={{ query }}&{% endif %}{% if request.GET.target_trial %}target_trial={{ request.GET.target_trial }}&{% endif %}{% if request.GET.effect_measure %}effect_measure={{ request.GET.effect_measure }}&{% endif %}{% if request.GET.disease_category %}disease_category={{ request.GET.disease_category }}&{% endif %}page={{ page_num }}">{{ page_num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if studies.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% if query %}q={{ query }}&{% endif %}{% if request.GET.target_trial %}target_trial={{ request.GET.target_trial }}&{% endif %}{% if request.GET.effect_measure %}effect_measure={{ request.GET.effect_measure }}&{% endif %}{% if request.GET.disease_category %}disease_category={{ request.GET.disease_category }}&{% endif %}page={{ studies.next_page_number }}">
+                                    Next <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-balance-scale fa-3x text-muted mb-3"></i>
+                <h3 class="text-muted">No Comparative Studies Found</h3>
+                <p class="text-muted">Try adjusting your search criteria or <a href="{% url 'ttedb:tte_vs_rct' %}">clear all filters</a>.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Summary Information -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="ttedb-overview">
+                <h4><i class="fas fa-info-circle text-primary me-2"></i>About TTE vs RCT Comparisons</h4>
+                <div class="row">
+                    <div class="col-md-8">
+                        <p>
+                            This page showcases studies that directly compared Target Trial Emulation (TTE) results 
+                            with their corresponding Randomized Controlled Trials (RCTs). These comparisons are crucial 
+                            for understanding the validity and reliability of the TTE methodology.
+                        </p>
+                        <h6>Key Metrics:</h6>
+                        <ul>
+                            <li><strong>CI Overlap:</strong> Whether confidence intervals of TTE and RCT estimates overlap</li>
+                            <li><strong>Direction Agreement:</strong> Whether TTE and RCT point to the same conclusion (benefit/harm)</li>
+                            <li><strong>Effect Measure:</strong> The statistical measure used (HR, OR, RR, etc.)</li>
+                            <li><strong>Transparency:</strong> Availability of protocol, data, and analysis code</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="ttedb-stat-card">
+                            <div class="ttedb-stat-number">{{ studies.paginator.count }}</div>
+                            <div class="ttedb-stat-label">Studies with RCT Comparisons</div>
+                        </div>
+                        <div class="mt-3">
+                            <a href="{% url 'ttedb:statistics' %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-chart-bar me-1"></i>View Detailed Statistics
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,194 @@
+{% extends "ttedb/base.html" %}
+{% load static %}
+
+{% block title %}TTEdb - Target Trial Emulation Database{% endblock %}
+{% block page_title %}Home{% endblock %}
+
+{% block meta_description %}TTEdb - Comprehensive database of target trial emulation studies and their concordance with randomized controlled trials. Explore methodological approaches, transparency indicators, and concordance metrics.{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="ttedb-hero-section">
+    <div class="container">
+        <div class="ttedb-hero-content">
+            <h1 class="ttedb-hero-title">Target Trial Emulation Database</h1>
+            <p class="ttedb-hero-subtitle">
+                A comprehensive database examining concordance between target trial emulations and their corresponding randomized controlled trials
+            </p>
+            <div class="d-flex justify-content-center gap-3 mt-4">
+                <a href="{% url 'ttedb:tte_list' %}" class="btn btn-light btn-lg">
+                    <i class="fas fa-flask me-2"></i>Browse TTE Studies
+                </a>
+                <a href="{% url 'ttedb:tte_vs_rct' %}" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-balance-scale me-2"></i>TTE vs RCT
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Database Overview -->
+<div class="container">
+    <div class="ttedb-overview">
+        <h2 class="text-center mb-4">Database Overview</h2>
+        <div class="ttedb-stats-grid">
+            <div class="ttedb-stat-card">
+                <div class="ttedb-stat-number">{{ total_studies }}</div>
+                <div class="ttedb-stat-label">TTE Studies</div>
+            </div>
+            <div class="ttedb-stat-card">
+                <div class="ttedb-stat-number">{{ total_comparisons }}</div>
+                <div class="ttedb-stat-label">PICO Comparisons</div>
+            </div>
+            <div class="ttedb-stat-card">
+                <div class="ttedb-stat-number">{{ disease_categories|length }}</div>
+                <div class="ttedb-stat-label">Disease Categories</div>
+            </div>
+            <div class="ttedb-stat-card">
+                <div class="ttedb-stat-number">2019-2024</div>
+                <div class="ttedb-stat-label">Publication Years</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Studies -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="ttedb-overview">
+                <h3 class="mb-3">
+                    <i class="fas fa-clock text-primary me-2"></i>Recent Studies
+                </h3>
+                {% if recent_studies %}
+                    <div class="list-group list-group-flush">
+                        {% for study in recent_studies %}
+                            <div class="list-group-item d-flex justify-content-between align-items-start">
+                                <div class="ms-2 me-auto">
+                                    <div class="fw-bold">
+                                        <a href="{% url 'ttedb:tte_detail' study.slug %}" class="text-decoration-none">
+                                            {{ study.first_author }} ({{ study.year }})
+                                        </a>
+                                    </div>
+                                    <p class="mb-1">{{ study.disease }} | {{ study.disease_category }}</p>
+                                    <small class="text-muted">{{ study.data_type|title }} data from {{ study.data_geography }}</small>
+                                </div>
+                                <div class="d-flex flex-column align-items-end">
+                                    {% if study.has_transparency_indicators %}
+                                        <span class="transparency-indicator transparency-good">
+                                            <i class="fas fa-check-circle me-1"></i>High Transparency
+                                        </span>
+                                    {% else %}
+                                        <span class="transparency-indicator transparency-poor">
+                                            <i class="fas fa-exclamation-circle me-1"></i>Low Transparency
+                                        </span>
+                                    {% endif %}
+                                    {% if study.dag %}
+                                        <small class="text-success mt-1"><i class="fas fa-project-diagram me-1"></i>DAG</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{% url 'ttedb:tte_list' %}" class="btn btn-primary">
+                            View All Studies <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No studies available.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Disease Categories -->
+            <div class="ttedb-overview">
+                <h3 class="mb-3">
+                    <i class="fas fa-chart-pie text-primary me-2"></i>Disease Categories
+                </h3>
+                {% if disease_categories %}
+                    <div class="list-group list-group-flush">
+                        {% for category in disease_categories %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>{{ category.disease_category|default:"Other" }}</span>
+                                <span class="badge bg-primary rounded-pill">{{ category.count }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Quick Links -->
+            <div class="ttedb-overview mt-4">
+                <h3 class="mb-3">
+                    <i class="fas fa-link text-primary me-2"></i>Quick Links
+                </h3>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'ttedb:learning_hub' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-graduation-cap me-2"></i>Learning Hub
+                    </a>
+                    <a href="{% url 'ttedb:statistics' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-chart-bar me-2"></i>Database Statistics
+                    </a>
+                    <a href="/api/" class="btn btn-outline-primary" target="_blank">
+                        <i class="fas fa-code me-2"></i>API Documentation
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Section -->
+    <div class="ttedb-overview mt-4">
+        <div class="row">
+            <div class="col-lg-8">
+                <h3 class="mb-3">About TTEdb</h3>
+                <p class="lead">
+                    TTEdb is a comprehensive database examining the concordance between target trial emulation (TTE) studies 
+                    and their corresponding randomized controlled trials (RCTs).
+                </p>
+                <p>
+                    This database is part of a meta-research study investigating the validity and reliability of target trial 
+                    emulation as a methodological approach. By systematically comparing TTE results with their target RCTs, 
+                    we aim to identify factors associated with better concordance and provide evidence-based recommendations 
+                    for future TTE studies.
+                </p>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-bullseye text-primary me-2"></i>Key Features</h5>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i>Comprehensive TTE study database</li>
+                            <li><i class="fas fa-check text-success me-2"></i>PICO-level comparisons with RCTs</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Transparency indicators</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Methodological quality assessment</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-search text-primary me-2"></i>Research Areas</h5>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-circle text-primary me-2" style="font-size: 0.5rem;"></i>Cardiovascular disease</li>
+                            <li><i class="fas fa-circle text-primary me-2" style="font-size: 0.5rem;"></i>Oncology</li>
+                            <li><i class="fas fa-circle text-primary me-2" style="font-size: 0.5rem;"></i>Infectious diseases</li>
+                            <li><i class="fas fa-circle text-primary me-2" style="font-size: 0.5rem;"></i>And many more...</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <h5>Citation</h5>
+                <div class="border rounded p-3 bg-light">
+                    <small class="text-muted">
+                        Sofi-Mahmudi, A., Thorlund, K., Dron, L., & Arora, P. (2024). 
+                        <em>TTEdb: Target Trial Emulation Database</em>. 
+                        Retrieved from <a href="https://ttedb.xeradb.com">https://ttedb.xeradb.com</a>
+                    </small>
+                </div>
+                <div class="mt-3">
+                    <a href="{% url 'ttedb:about' %}" class="btn btn-primary btn-sm">
+                        Learn More <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

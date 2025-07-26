@@ -1,0 +1,669 @@
+{% extends "ttedb/base.html" %}
+{% load static %}
+
+{% block title %}{{ study.first_author }} ({{ study.year }}) - TTEdb{% endblock %}
+{% block page_title %}{{ study.first_author }} ({{ study.year }}){% endblock %}
+
+{% block meta_description %}Detailed information about {{ study.first_author }} ({{ study.year }}) target trial emulation study: {{ study.disease }} using {{ study.data_type }} data.{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'ttedb:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'ttedb:tte_list' %}">TTE Studies</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ study.first_author }} ({{ study.year }})</li>
+        </ol>
+    </nav>
+
+    <!-- Study Header -->
+    <div class="ttedb-overview">
+        <div class="row">
+            <div class="col-md-8">
+                <h1 class="mb-3">{{ study.first_author }} ({{ study.year }})</h1>
+                <p class="lead">{{ study.disease }}</p>
+                <p class="text-muted">{{ study.disease_category }} • {{ study.data_type|title }} Data • {{ study.data_geography }}</p>
+                
+                <!-- Quick Actions -->
+                <div class="d-flex gap-2 mt-3">
+                    {% if study.doi %}
+                        <a href="{{ study.doi }}" target="_blank" class="btn btn-primary">
+                            <i class="fas fa-external-link-alt me-1"></i>View Paper
+                        </a>
+                    {% endif %}
+                    {% if study.protocol %}
+                        <a href="{{ study.protocol }}" target="_blank" class="btn btn-outline-success">
+                            <i class="fas fa-file-contract me-1"></i>Protocol
+                        </a>
+                    {% endif %}
+                    {% if study.data_url %}
+                        <a href="{{ study.data_url }}" target="_blank" class="btn btn-outline-info">
+                            <i class="fas fa-database me-1"></i>Data
+                        </a>
+                    {% endif %}
+                    {% if study.code_url %}
+                        <a href="{{ study.code_url }}" target="_blank" class="btn btn-outline-secondary">
+                            <i class="fas fa-code me-1"></i>Code
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <!-- Study Metrics -->
+                <div class="card border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Study Metrics</h6>
+                    </div>
+                    <div class="card-body">
+                        {% if study.total_sample_size %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Total Sample</span>
+                                <strong class="text-primary">{{ study.total_sample_size|floatformat:0 }}</strong>
+                            </div>
+                        {% endif %}
+                        {% if study.n_trt %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Treatment Group</span>
+                                <strong>{{ study.n_trt|floatformat:0 }}</strong>
+                            </div>
+                        {% endif %}
+                        {% if study.n_ctrl %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Control Group</span>
+                                <strong>{{ study.n_ctrl|floatformat:0 }}</strong>
+                            </div>
+                        {% endif %}
+                        {% if study.n_covariates %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Covariates</span>
+                                <strong>{{ study.n_covariates }}</strong>
+                            </div>
+                        {% endif %}
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>PICO Comparisons</span>
+                            <strong class="text-success">{{ pico_comparisons.count }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quality Indicators -->
+                <div class="card border-success mt-3">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0"><i class="fas fa-check-circle me-2"></i>Quality Indicators</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Transparency</span>
+                            {% if study.has_transparency_indicators %}
+                                <span class="badge bg-success">High</span>
+                            {% else %}
+                                <span class="badge bg-warning">Low</span>
+                            {% endif %}
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>DAG Usage</span>
+                            {% if study.dag %}
+                                <span class="badge bg-success">Yes</span>
+                            {% else %}
+                                <span class="badge bg-secondary">No</span>
+                            {% endif %}
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>QBA Performed</span>
+                            {% if study.qba %}
+                                <span class="badge bg-success">Yes</span>
+                            {% else %}
+                                <span class="badge bg-secondary">No</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Study Details Tabs -->
+    <ul class="nav nav-tabs nav-fill mb-4" id="studyTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
+                <i class="fas fa-info-circle me-2"></i>Overview
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="methodology-tab" data-bs-toggle="tab" data-bs-target="#methodology" type="button" role="tab">
+                <i class="fas fa-cogs me-2"></i>Methodology
+            </button>
+        </li>
+        {% if pico_comparisons %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="comparisons-tab" data-bs-toggle="tab" data-bs-target="#comparisons" type="button" role="tab">
+                    <i class="fas fa-balance-scale me-2"></i>TTE vs RCT
+                </button>
+            </li>
+        {% endif %}
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="transparency-tab" data-bs-toggle="tab" data-bs-target="#transparency" type="button" role="tab">
+                <i class="fas fa-eye me-2"></i>Transparency
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="studyTabContent">
+        
+        <!-- Overview Tab -->
+        <div class="tab-pane fade show active" id="overview" role="tabpanel">
+            <div class="row">
+                <!-- Basic Information -->
+                <div class="col-md-6 mb-4">
+                    <div class="ttedb-overview">
+                        <h4><i class="fas fa-info-circle text-primary me-2"></i>Study Information</h4>
+                        <table class="table table-borderless">
+                            <tbody>
+                                <tr>
+                                    <td class="fw-bold">First Author:</td>
+                                    <td>{{ study.first_author }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Publication Year:</td>
+                                    <td>{{ study.year }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">DOI:</td>
+                                    <td>
+                                        {% if study.doi %}
+                                            <a href="{{ study.doi }}" target="_blank">{{ study.doi }}</a>
+                                        {% else %}
+                                            Not available
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% if study.preprint %}
+                                    <tr>
+                                        <td class="fw-bold">Preprint:</td>
+                                        <td>{{ study.preprint }}</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Institution & Funding -->
+                <div class="col-md-6 mb-4">
+                    <div class="ttedb-overview">
+                        <h4><i class="fas fa-university text-primary me-2"></i>Institution & Funding</h4>
+                        <table class="table table-borderless">
+                            <tbody>
+                                {% if study.institution_type %}
+                                    <tr>
+                                        <td class="fw-bold">Institution Type:</td>
+                                        <td>{{ study.get_institution_type_display }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if study.institution_names %}
+                                    <tr>
+                                        <td class="fw-bold">Institutions:</td>
+                                        <td>{{ study.institution_names }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if study.funding %}
+                                    <tr>
+                                        <td class="fw-bold">Funding:</td>
+                                        <td>{{ study.funding }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if study.funding_institutions %}
+                                    <tr>
+                                        <td class="fw-bold">Funding Institutions:</td>
+                                        <td>{{ study.funding_institutions }}</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Study Context -->
+                <div class="col-md-12 mb-4">
+                    <div class="ttedb-overview">
+                        <h4><i class="fas fa-map-marker-alt text-primary me-2"></i>Study Context</h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    <tbody>
+                                        <tr>
+                                            <td class="fw-bold">Disease:</td>
+                                            <td>{{ study.disease }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Disease Category:</td>
+                                            <td>{{ study.disease_category }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Data Type:</td>
+                                            <td>{{ study.get_data_type_display }}</td>
+                                        </tr>
+                                        {% if study.data_sources_n %}
+                                            <tr>
+                                                <td class="fw-bold">Number of Data Sources:</td>
+                                                <td>{{ study.data_sources_n }}</td>
+                                            </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    <tbody>
+                                        <tr>
+                                            <td class="fw-bold">Geography:</td>
+                                            <td>{{ study.data_geography }}</td>
+                                        </tr>
+                                        {% if study.eligible_sample %}
+                                            <tr>
+                                                <td class="fw-bold">Eligible Sample:</td>
+                                                <td>{{ study.eligible_sample }}</td>
+                                            </tr>
+                                        {% endif %}
+                                        {% if study.n_emulations %}
+                                            <tr>
+                                                <td class="fw-bold">Number of Emulations:</td>
+                                                <td>{{ study.n_emulations }}</td>
+                                            </tr>
+                                        {% endif %}
+                                        {% if study.trts_n %}
+                                            <tr>
+                                                <td class="fw-bold">Number of Treatments:</td>
+                                                <td>{{ study.trts_n }}</td>
+                                            </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Methodology Tab -->
+        <div class="tab-pane fade" id="methodology" role="tabpanel">
+            <div class="row">
+                <!-- Analytical Methods -->
+                <div class="col-md-6 mb-4">
+                    <div class="ttedb-overview">
+                        <h4><i class="fas fa-calculator text-primary me-2"></i>Analytical Methods</h4>
+                        <table class="table table-borderless">
+                            <tbody>
+                                {% if study.missing_method %}
+                                    <tr>
+                                        <td class="fw-bold">Missing Data Method:</td>
+                                        <td>{{ study.missing_method }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if study.matching_method %}
+                                    <tr>
+                                        <td class="fw-bold">Matching Method:</td>
+                                        <td>{{ study.matching_method }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if study.analysis_method %}
+                                    <tr>
+                                        <td class="fw-bold">Analysis Method:</td>
+                                        <td>{{ study.analysis_method }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if study.estimand %}
+                                    <tr>
+                                        <td class="fw-bold">Estimand:</td>
+                                        <td>{{ study.estimand }}</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Quality Methodology -->
+                <div class="col-md-6 mb-4">
+                    <div class="ttedb-overview">
+                        <h4><i class="fas fa-check-double text-primary me-2"></i>Quality Methods</h4>
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>
+                                    <i class="fas fa-project-diagram me-2"></i>
+                                    <strong>Directed Acyclic Graph (DAG)</strong>
+                                </span>
+                                {% if study.dag %}
+                                    <span class="badge bg-success">Used</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Not Used</span>
+                                {% endif %}
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>
+                                    <i class="fas fa-balance-scale me-2"></i>
+                                    <strong>Quantitative Bias Analysis (QBA)</strong>
+                                </span>
+                                {% if study.qba %}
+                                    <span class="badge bg-success">Performed</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Not Performed</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        {% if study.dag or study.qba %}
+                            <div class="alert alert-success mt-3">
+                                <i class="fas fa-thumbs-up me-2"></i>
+                                <strong>Good Practice:</strong> This study employed advanced methodological approaches 
+                                {% if study.dag and study.qba %}
+                                    including both DAG and QBA methods.
+                                {% elif study.dag %}
+                                    including DAG methodology.
+                                {% else %}
+                                    including quantitative bias analysis.
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Target Trial Information -->
+                {% if study.target_trial_name %}
+                    <div class="col-md-12 mb-4">
+                        <div class="ttedb-overview">
+                            <h4><i class="fas fa-bullseye text-primary me-2"></i>Target Trial Information</h4>
+                            <table class="table table-borderless">
+                                <tbody>
+                                    <tr>
+                                        <td class="fw-bold">Target Trial Name:</td>
+                                        <td>{{ study.target_trial_name }}</td>
+                                    </tr>
+                                    {% if study.target_trial_reg_no %}
+                                        <tr>
+                                            <td class="fw-bold">Registration Number:</td>
+                                            <td>{{ study.target_trial_reg_no }}</td>
+                                        </tr>
+                                    {% endif %}
+                                    {% if study.target_trial_doi %}
+                                        <tr>
+                                            <td class="fw-bold">Target Trial DOI:</td>
+                                            <td>
+                                                <a href="{{ study.target_trial_doi }}" target="_blank">{{ study.target_trial_doi }}</a>
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- TTE vs RCT Comparisons Tab -->
+        {% if pico_comparisons %}
+            <div class="tab-pane fade" id="comparisons" role="tabpanel">
+                <div class="ttedb-overview">
+                    <h4><i class="fas fa-balance-scale text-primary me-2"></i>TTE vs RCT Comparisons</h4>
+                    <p class="text-muted">Detailed comparison between Target Trial Emulation results and corresponding Randomized Controlled Trial outcomes.</p>
+                    
+                    {% for pico in pico_comparisons %}
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <h6 class="mb-0">{{ pico.outcome }}</h6>
+                                        <small class="text-muted">{{ pico.target_trial_name }}</small>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <span class="badge bg-primary">{{ pico.effect_measure }}</span>
+                                        {% if pico.outcome_type == 'safety' %}
+                                            <span class="badge bg-warning">Safety</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Efficacy</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <!-- PICO Elements -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <h6><i class="fas fa-users text-primary me-2"></i>Population</h6>
+                                        <p class="small">{{ pico.population }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6><i class="fas fa-pills text-success me-2"></i>Intervention</h6>
+                                        <p class="small">{{ pico.intervention }}</p>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <h6><i class="fas fa-not-equal text-warning me-2"></i>Comparison</h6>
+                                        <p class="small">{{ pico.comparison }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6><i class="fas fa-chart-line text-info me-2"></i>Outcome</h6>
+                                        <p class="small">{{ pico.outcome }}</p>
+                                    </div>
+                                </div>
+
+                                <!-- Results Comparison -->
+                                <div class="row">
+                                    <div class="col-md-5">
+                                        <div class="card border-primary">
+                                            <div class="card-header bg-primary text-white">
+                                                <h6 class="mb-0">RCT Result</h6>
+                                            </div>
+                                            <div class="card-body text-center">
+                                                {% if pico.rct_estimate %}
+                                                    <h4 class="text-primary">{{ pico.rct_estimate|floatformat:2 }}</h4>
+                                                    <p class="small text-muted">95% CI: {{ pico.rct_ci_string }}</p>
+                                                {% else %}
+                                                    <p class="text-muted">Not available</p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-center justify-content-center">
+                                        <div class="text-center">
+                                            <i class="fas fa-arrows-alt-h fa-2x text-muted"></i>
+                                            <br><small class="text-muted">vs</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <div class="card border-success">
+                                            <div class="card-header bg-success text-white">
+                                                <h6 class="mb-0">TTE Result</h6>
+                                            </div>
+                                            <div class="card-body text-center">
+                                                {% if pico.tte_estimate %}
+                                                    <h4 class="text-success">{{ pico.tte_estimate|floatformat:2 }}</h4>
+                                                    <p class="small text-muted">95% CI: {{ pico.tte_ci_string }}</p>
+                                                {% else %}
+                                                    <p class="text-muted">Not available</p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Concordance Assessment -->
+                                {% if pico.rct_estimate and pico.tte_estimate %}
+                                    <div class="row mt-3">
+                                        <div class="col-md-12">
+                                            <div class="alert alert-light border">
+                                                <h6><i class="fas fa-search me-2"></i>Concordance Assessment</h6>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <strong>Confidence Interval Overlap:</strong>
+                                                        {% if pico.estimates_overlap %}
+                                                            <span class="badge bg-success ms-2">Yes</span>
+                                                            <br><small class="text-muted">CIs overlap, suggesting concordance</small>
+                                                        {% else %}
+                                                            <span class="badge bg-danger ms-2">No</span>
+                                                            <br><small class="text-muted">CIs do not overlap</small>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <strong>Direction Agreement:</strong>
+                                                        {% if pico.concordance_direction %}
+                                                            <span class="badge bg-success ms-2">Same Direction</span>
+                                                            <br><small class="text-muted">Both point to similar conclusion</small>
+                                                        {% else %}
+                                                            <span class="badge bg-warning ms-2">Different Direction</span>
+                                                            <br><small class="text-muted">Different conclusions</small>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Transparency Tab -->
+        <div class="tab-pane fade" id="transparency" role="tabpanel">
+            <div class="row">
+                <!-- Transparency Indicators -->
+                <div class="col-md-6 mb-4">
+                    <div class="ttedb-overview">
+                        <h4><i class="fas fa-eye text-primary me-2"></i>Transparency Indicators</h4>
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>
+                                    <i class="fas fa-file-contract me-2"></i>
+                                    <strong>Protocol Registration</strong>
+                                </span>
+                                {% if study.protocol %}
+                                    <span class="badge bg-success">Available</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Not Available</span>
+                                {% endif %}
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>
+                                    <i class="fas fa-database me-2"></i>
+                                    <strong>Data Sharing</strong>
+                                </span>
+                                {% if study.data_url %}
+                                    <span class="badge bg-success">Available</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Not Available</span>
+                                {% endif %}
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>
+                                    <i class="fas fa-code me-2"></i>
+                                    <strong>Code Sharing</strong>
+                                </span>
+                                {% if study.code_url %}
+                                    <span class="badge bg-success">Available</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Not Available</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <h6>Overall Transparency Score:</h6>
+                            {% if study.has_transparency_indicators %}
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    <strong>High Transparency</strong> - This study meets good transparency standards.
+                                </div>
+                            {% else %}
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Limited Transparency</strong> - Consider improving data and code sharing.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Conflicts & Funding -->
+                <div class="col-md-6 mb-4">
+                    <div class="ttedb-overview">
+                        <h4><i class="fas fa-handshake text-primary me-2"></i>Conflicts & Funding</h4>
+                        <table class="table table-borderless">
+                            <tbody>
+                                {% if study.coi %}
+                                    <tr>
+                                        <td class="fw-bold">Conflicts of Interest:</td>
+                                        <td>{{ study.coi }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if study.coi_institutions %}
+                                    <tr>
+                                        <td class="fw-bold">COI Institutions:</td>
+                                        <td>{{ study.coi_institutions }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if study.funding %}
+                                    <tr>
+                                        <td class="fw-bold">Funding Source:</td>
+                                        <td>{{ study.funding }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if study.funding_institutions %}
+                                    <tr>
+                                        <td class="fw-bold">Funding Institutions:</td>
+                                        <td>{{ study.funding_institutions }}</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Studies -->
+    <div class="ttedb-overview mt-4">
+        <h4><i class="fas fa-link text-primary me-2"></i>Explore Related</h4>
+        <div class="row">
+            <div class="col-md-4">
+                <a href="{% url 'ttedb:tte_list' %}?disease_category={{ study.disease_category }}" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-filter me-1"></i>Similar Disease Category
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="{% url 'ttedb:tte_list' %}?data_type={{ study.data_type }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-database me-1"></i>Same Data Type
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="{% url 'ttedb:tte_list' %}?year={{ study.year }}" class="btn btn-outline-info btn-sm">
+                    <i class="fas fa-calendar me-1"></i>Same Publication Year
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize Bootstrap tabs
+document.addEventListener('DOMContentLoaded', function() {
+    var triggerTabList = [].slice.call(document.querySelectorAll('#studyTab button'))
+    triggerTabList.forEach(function (triggerEl) {
+        var tabTrigger = new bootstrap.Tab(triggerEl)
+        
+        triggerEl.addEventListener('click', function (event) {
+            event.preventDefault()
+            tabTrigger.show()
+        })
+    })
+});
+</script>
+{% endblock %} 

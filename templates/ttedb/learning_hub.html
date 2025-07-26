@@ -1,0 +1,351 @@
+{% extends "ttedb/base.html" %}
+{% load static %}
+{% load ttedb_extras %}
+
+{% block title %}Learning Hub - TTEdb{% endblock %}
+{% block page_title %}Learning Hub{% endblock %}
+
+{% block meta_description %}Educational resources for Target Trial Emulation, causal inference, directed acyclic graphs (DAGs), quantitative bias analysis (QBA), and methodological approaches.{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'ttedb:home' %}">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Learning Hub</li>
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="ttedb-overview">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">
+                    <i class="fas fa-graduation-cap text-primary me-2"></i>Learning Hub
+                </h1>
+                <p class="lead mb-0">
+                    Educational resources for Target Trial Emulation, causal inference, and related methodological approaches. 
+                    Explore {{ resources.paginator.count }} curated resources from foundational papers to practical tools.
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="ttedb-stat-card d-inline-block">
+                    <div class="ttedb-stat-number">{{ resources.paginator.count }}</div>
+                    <div class="ttedb-stat-label">Learning Resources</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Featured Resources -->
+    {% if resources.object_list %}
+        {% with featured_resources=resources.object_list|slice:":3" %}
+            {% if featured_resources.0.is_featured %}
+                <div class="ttedb-overview">
+                    <h3 class="mb-4">
+                        <i class="fas fa-star text-warning me-2"></i>Featured Resources
+                    </h3>
+                    <div class="row">
+                        {% for resource in featured_resources %}
+                            {% if resource.is_featured %}
+                                <div class="col-md-4 mb-4">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <span class="badge bg-primary">{{ resource.get_resource_type_display }}</span>
+                                                <span class="badge bg-light text-dark">{{ resource.difficulty_level|title }}</span>
+                                            </div>
+                                            <h6 class="card-title">
+                                                <a href="{% url 'ttedb:learning_resource_detail' resource.id %}" class="text-decoration-none">
+                                                    {{ resource.title|truncatechars:60 }}
+                                                </a>
+                                            </h6>
+                                            {% if resource.authors %}
+                                                <p class="text-muted small mb-2">{{ resource.authors|truncatechars:40 }}</p>
+                                            {% endif %}
+                                            <p class="card-text small">{{ resource.description|truncatechars:100 }}</p>
+                                            {% if resource.year %}
+                                                <small class="text-muted">{{ resource.year }}</small>
+                                            {% endif %}
+                                        </div>
+                                        <div class="card-footer bg-transparent border-0">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <a href="{{ resource.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                                    <i class="fas fa-external-link-alt me-1"></i>Access
+                                                </a>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-eye me-1"></i>{{ resource.view_count }} views
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        {% endwith %}
+    {% endif %}
+
+    <!-- Search and Filters -->
+    <div class="ttedb-search-bar">
+        <form method="get" class="ttedb-search-form">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" name="q" value="{{ query }}" 
+                               placeholder="Search resources by title, author, description...">
+                        <button class="btn btn-primary" type="submit">Search</button>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="ttedb-filter-group">
+                        <select name="type" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Resource Types</option>
+                            {% for type_value, type_label in resource_types %}
+                                <option value="{{ type_value }}" {% if request.GET.type == type_value %}selected{% endif %}>
+                                    {{ type_label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <select name="difficulty" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Difficulty Levels</option>
+                        {% for difficulty_value, difficulty_label in difficulty_levels %}
+                            <option value="{{ difficulty_value }}" {% if request.GET.difficulty == difficulty_value %}selected{% endif %}>
+                                {{ difficulty_label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <select name="topic" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Topics</option>
+                        <option value="target trial" {% if request.GET.topic == "target trial" %}selected{% endif %}>Target Trial Emulation</option>
+                        <option value="causal inference" {% if request.GET.topic == "causal inference" %}selected{% endif %}>Causal Inference</option>
+                        <option value="DAG" {% if request.GET.topic == "DAG" %}selected{% endif %}>Directed Acyclic Graphs</option>
+                        <option value="QBA" {% if request.GET.topic == "QBA" %}selected{% endif %}>Quantitative Bias Analysis</option>
+                        <option value="software" {% if request.GET.topic == "software" %}selected{% endif %}>Software & Tools</option>
+                    </select>
+                </div>
+            </div>
+
+            {% if query or request.GET.type or request.GET.difficulty or request.GET.topic %}
+                <div class="mt-3">
+                    <a href="{% url 'ttedb:learning_hub' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-times me-1"></i>Clear Filters
+                    </a>
+                </div>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Resource Categories -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="ttedb-overview">
+                <h4><i class="fas fa-layer-group text-primary me-2"></i>Browse by Category</h4>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <a href="?topic=target trial" class="text-decoration-none">
+                            <div class="card border-primary">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-flask text-primary fa-2x mb-2"></i>
+                                    <h6 class="card-title">Target Trial Emulation</h6>
+                                    <p class="card-text small">Foundational methods and applications</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="?topic=causal inference" class="text-decoration-none">
+                            <div class="card border-success">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-link text-success fa-2x mb-2"></i>
+                                    <h6 class="card-title">Causal Inference</h6>
+                                    <p class="card-text small">Theory and practical applications</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="?topic=DAG" class="text-decoration-none">
+                            <div class="card border-info">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-project-diagram text-info fa-2x mb-2"></i>
+                                    <h6 class="card-title">DAGs</h6>
+                                    <p class="card-text small">Directed acyclic graphs and tools</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="?topic=QBA" class="text-decoration-none">
+                            <div class="card border-warning">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-balance-scale text-warning fa-2x mb-2"></i>
+                                    <h6 class="card-title">QBA</h6>
+                                    <p class="card-text small">Quantitative bias analysis methods</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resources List -->
+    <div class="ttedb-table">
+        {% if resources %}
+            <div class="row">
+                {% for resource in resources %}
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-primary">{{ resource.get_resource_type_display }}</span>
+                                    <div>
+                                        <span class="badge bg-light text-dark">{{ resource.difficulty_level|title }}</span>
+                                        {% if resource.is_featured %}
+                                            <span class="badge bg-warning text-dark">Featured</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <h6 class="card-title">
+                                    <a href="{% url 'ttedb:learning_resource_detail' resource.id %}" class="text-decoration-none">
+                                        {{ resource.title }}
+                                    </a>
+                                </h6>
+                                
+                                {% if resource.authors %}
+                                    <p class="text-muted small mb-2">
+                                        <i class="fas fa-user me-1"></i>{{ resource.authors }}
+                                    </p>
+                                {% endif %}
+                                
+                                {% if resource.journal %}
+                                    <p class="text-muted small mb-2">
+                                        <i class="fas fa-journal-whills me-1"></i>{{ resource.journal }}
+                                        {% if resource.year %} ({{ resource.year }}){% endif %}
+                                    </p>
+                                {% elif resource.year %}
+                                    <p class="text-muted small mb-2">
+                                        <i class="fas fa-calendar me-1"></i>{{ resource.year }}
+                                    </p>
+                                {% endif %}
+                                
+                                <p class="card-text">{{ resource.description|truncatechars:150 }}</p>
+                                
+                                {% if resource.tags %}
+                                    <div class="mb-2">
+                                        {% for tag in resource.tags|split:"," %}
+                                            <span class="badge bg-light text-dark me-1">{{ tag|trim }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="card-footer bg-transparent">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ resource.url }}" target="_blank" class="btn btn-primary">
+                                            <i class="fas fa-external-link-alt me-1"></i>Access
+                                        </a>
+                                        <a href="{% url 'ttedb:learning_resource_detail' resource.id %}" class="btn btn-outline-primary">
+                                            <i class="fas fa-info-circle me-1"></i>Details
+                                        </a>
+                                    </div>
+                                    <small class="text-muted">
+                                        <i class="fas fa-eye me-1"></i>{{ resource.view_count }} views
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if resources.has_other_pages %}
+                <nav aria-label="Resources pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if resources.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% if query %}q={{ query }}&{% endif %}{% if request.GET.type %}type={{ request.GET.type }}&{% endif %}{% if request.GET.difficulty %}difficulty={{ request.GET.difficulty }}&{% endif %}{% if request.GET.topic %}topic={{ request.GET.topic }}&{% endif %}page={{ resources.previous_page_number }}">
+                                    <i class="fas fa-chevron-left"></i> Previous
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for page_num in resources.paginator.page_range %}
+                            {% if page_num == resources.number %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                            {% elif page_num > resources.number|add:'-3' and page_num < resources.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if query %}q={{ query }}&{% endif %}{% if request.GET.type %}type={{ request.GET.type }}&{% endif %}{% if request.GET.difficulty %}difficulty={{ request.GET.difficulty }}&{% endif %}{% if request.GET.topic %}topic={{ request.GET.topic }}&{% endif %}page={{ page_num }}">{{ page_num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if resources.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% if query %}q={{ query }}&{% endif %}{% if request.GET.type %}type={{ request.GET.type }}&{% endif %}{% if request.GET.difficulty %}difficulty={{ request.GET.difficulty }}&{% endif %}{% if request.GET.topic %}topic={{ request.GET.topic }}&{% endif %}page={{ resources.next_page_number }}">
+                                    Next <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                <h3 class="text-muted">No Resources Found</h3>
+                <p class="text-muted">Try adjusting your search criteria or <a href="{% url 'ttedb:learning_hub' %}">clear all filters</a>.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Learning Pathways -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="ttedb-overview">
+                <h4><i class="fas fa-route text-primary me-2"></i>Learning Pathways</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-graduation-cap text-success me-2"></i>Beginner Path</h6>
+                        <ol class="small">
+                            <li>Start with <strong>"The target trial approach"</strong> (JAMA 2022)</li>
+                            <li>Take the <strong>Introduction to Causal Inference</strong> online course</li>
+                            <li>Learn to use <strong>DAGitty</strong> for causal diagrams</li>
+                            <li>Read <strong>"A crash course in good and bad controls"</strong></li>
+                        </ol>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-user-graduate text-warning me-2"></i>Advanced Path</h6>
+                        <ol class="small">
+                            <li>Master <strong>"Causal Inference: What If"</strong> textbook</li>
+                            <li>Study <strong>"Using big data to emulate a target trial"</strong></li>
+                            <li>Learn quantitative bias analysis methods</li>
+                            <li>Practice with <strong>DoWhy</strong> Python library</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

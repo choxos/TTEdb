@@ -1,0 +1,395 @@
+{% extends "ttedb/base.html" %}
+{% load static %}
+
+{% block title %}{{ resource.title }} - Learning Hub - TTEdb{% endblock %}
+{% block page_title %}{{ resource.title }}{% endblock %}
+
+{% block meta_description %}{{ resource.description|truncatechars:160 }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'ttedb:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'ttedb:learning_hub' %}">Learning Hub</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ resource.title|truncatechars:50 }}</li>
+        </ol>
+    </nav>
+
+    <!-- Resource Header -->
+    <div class="ttedb-overview">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="d-flex gap-2 mb-3">
+                    <span class="badge bg-primary">{{ resource.get_resource_type_display }}</span>
+                    <span class="badge bg-light text-dark">{{ resource.difficulty_level|title }}</span>
+                    {% if resource.is_featured %}
+                        <span class="badge bg-warning text-dark">Featured</span>
+                    {% endif %}
+                </div>
+                
+                <h1 class="mb-3">{{ resource.title }}</h1>
+                
+                {% if resource.authors %}
+                    <p class="lead text-muted">
+                        <i class="fas fa-user me-2"></i>{{ resource.authors }}
+                    </p>
+                {% endif %}
+                
+                {% if resource.journal %}
+                    <p class="text-muted">
+                        <i class="fas fa-journal-whills me-2"></i>{{ resource.journal }}
+                        {% if resource.year %} ({{ resource.year }}){% endif %}
+                    </p>
+                {% elif resource.year %}
+                    <p class="text-muted">
+                        <i class="fas fa-calendar me-2"></i>{{ resource.year }}
+                    </p>
+                {% endif %}
+                
+                <!-- Quick Actions -->
+                <div class="d-flex gap-2 mt-3">
+                    <a href="{{ resource.url }}" target="_blank" class="btn btn-primary">
+                        <i class="fas fa-external-link-alt me-1"></i>Access Resource
+                    </a>
+                    {% if resource.doi %}
+                        <a href="https://doi.org/{{ resource.doi }}" target="_blank" class="btn btn-outline-secondary">
+                            <i class="fas fa-link me-1"></i>DOI
+                        </a>
+                    {% endif %}
+                    <button onclick="window.history.back()" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-1"></i>Back
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <!-- Resource Info Card -->
+                <div class="card border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Resource Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Type</span>
+                            <strong>{{ resource.get_resource_type_display }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Difficulty</span>
+                            <strong>{{ resource.difficulty_level|title }}</strong>
+                        </div>
+                        {% if resource.year %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Year</span>
+                                <strong>{{ resource.year }}</strong>
+                            </div>
+                        {% endif %}
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Views</span>
+                            <strong class="text-success">{{ resource.view_count }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tags -->
+                {% if resource.tags %}
+                    <div class="card border-secondary mt-3">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="fas fa-tags me-2"></i>Topics</h6>
+                        </div>
+                        <div class="card-body">
+                            {% for tag in resource.tags|split:"," %}
+                                <span class="badge bg-light text-dark me-1 mb-1">{{ tag|trim }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Resource Description -->
+    <div class="ttedb-overview">
+        <h3><i class="fas fa-align-left text-primary me-2"></i>Description</h3>
+        <p class="lead">{{ resource.description }}</p>
+        
+        <!-- Resource Type Specific Information -->
+        {% if resource.resource_type == 'methodological_paper' %}
+            <div class="alert alert-info">
+                <i class="fas fa-file-alt me-2"></i>
+                <strong>Methodological Paper:</strong> This is a peer-reviewed research paper focusing on 
+                methodological aspects of target trial emulation or related causal inference methods.
+            </div>
+        {% elif resource.resource_type == 'book' %}
+            <div class="alert alert-success">
+                <i class="fas fa-book me-2"></i>
+                <strong>Book/Textbook:</strong> Comprehensive resource covering theoretical foundations 
+                and practical applications. Ideal for in-depth learning.
+            </div>
+        {% elif resource.resource_type == 'software' %}
+            <div class="alert alert-warning">
+                <i class="fas fa-code me-2"></i>
+                <strong>Software/Tool:</strong> Practical tool or software package that can be used 
+                for implementing target trial emulation or causal inference methods.
+            </div>
+        {% elif resource.resource_type == 'course' %}
+            <div class="alert alert-primary">
+                <i class="fas fa-graduation-cap me-2"></i>
+                <strong>Online Course:</strong> Structured learning program with lectures, exercises, 
+                and guided instruction.
+            </div>
+        {% elif resource.resource_type == 'tutorial' %}
+            <div class="alert alert-secondary">
+                <i class="fas fa-chalkboard-teacher me-2"></i>
+                <strong>Tutorial:</strong> Step-by-step guide providing practical instructions 
+                for implementing specific methods or techniques.
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Learning Context -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="ttedb-overview">
+                <h4><i class="fas fa-bullseye text-primary me-2"></i>Learning Objectives</h4>
+                {% if resource.resource_type == 'methodological_paper' %}
+                    <ul>
+                        <li>Understand methodological approaches and innovations</li>
+                        <li>Learn about study design and analytical methods</li>
+                        <li>Gain insights into best practices and limitations</li>
+                        <li>Apply knowledge to future research projects</li>
+                    </ul>
+                {% elif resource.resource_type == 'book' %}
+                    <ul>
+                        <li>Master theoretical foundations</li>
+                        <li>Understand comprehensive methodological frameworks</li>
+                        <li>Learn practical implementation strategies</li>
+                        <li>Develop expertise in the subject area</li>
+                    </ul>
+                {% elif resource.resource_type == 'software' %}
+                    <ul>
+                        <li>Learn to use practical tools and software</li>
+                        <li>Implement methods in real data analysis</li>
+                        <li>Understand software capabilities and limitations</li>
+                        <li>Develop technical skills for research</li>
+                    </ul>
+                {% elif resource.resource_type == 'course' %}
+                    <ul>
+                        <li>Follow structured learning progression</li>
+                        <li>Complete exercises and assignments</li>
+                        <li>Interact with instructors and peers</li>
+                        <li>Achieve comprehensive understanding</li>
+                    </ul>
+                {% else %}
+                    <ul>
+                        <li>Gain practical knowledge and skills</li>
+                        <li>Understand key concepts and applications</li>
+                        <li>Learn best practices and methodologies</li>
+                        <li>Apply knowledge to real-world problems</li>
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="ttedb-overview">
+                <h4><i class="fas fa-users text-primary me-2"></i>Target Audience</h4>
+                {% if resource.difficulty_level == 'beginner' %}
+                    <div class="alert alert-success">
+                        <h6><i class="fas fa-seedling me-2"></i>Beginner Level</h6>
+                        <ul class="mb-0">
+                            <li>Students new to the field</li>
+                            <li>Researchers seeking introductory knowledge</li>
+                            <li>Those with basic statistical background</li>
+                            <li>Anyone interested in learning fundamentals</li>
+                        </ul>
+                    </div>
+                {% elif resource.difficulty_level == 'intermediate' %}
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-chart-line me-2"></i>Intermediate Level</h6>
+                        <ul class="mb-0">
+                            <li>Graduate students and researchers</li>
+                            <li>Those with epidemiology/biostatistics background</li>
+                            <li>Practitioners implementing TTE methods</li>
+                            <li>Readers familiar with basic causal inference</li>
+                        </ul>
+                    </div>
+                {% else %}
+                    <div class="alert alert-danger">
+                        <h6><i class="fas fa-user-graduate me-2"></i>Advanced Level</h6>
+                        <ul class="mb-0">
+                            <li>Experienced researchers and methodologists</li>
+                            <li>PhD students and postdocs</li>
+                            <li>Those developing new methods</li>
+                            <li>Experts in causal inference</li>
+                        </ul>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Prerequisites and Recommendations -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="ttedb-overview">
+                <h4><i class="fas fa-list-check text-primary me-2"></i>Prerequisites</h4>
+                {% if resource.difficulty_level == 'beginner' %}
+                    <ul>
+                        <li>Basic understanding of statistics</li>
+                        <li>Familiarity with research methods</li>
+                        <li>Interest in epidemiology or causal inference</li>
+                    </ul>
+                {% elif resource.difficulty_level == 'intermediate' %}
+                    <ul>
+                        <li>Graduate-level statistics knowledge</li>
+                        <li>Understanding of epidemiological concepts</li>
+                        <li>Familiarity with regression analysis</li>
+                        <li>Basic knowledge of study design</li>
+                    </ul>
+                {% else %}
+                    <ul>
+                        <li>Advanced statistical methods knowledge</li>
+                        <li>Expertise in causal inference</li>
+                        <li>Experience with observational studies</li>
+                        <li>Understanding of complex methodological concepts</li>
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="ttedb-overview">
+                <h4><i class="fas fa-lightbulb text-primary me-2"></i>Recommendations</h4>
+                <div class="list-group list-group-flush">
+                    {% if resource.difficulty_level == 'beginner' %}
+                        <div class="list-group-item">
+                            <i class="fas fa-play text-success me-2"></i>
+                            <strong>Start here</strong> if new to target trial emulation
+                        </div>
+                        <div class="list-group-item">
+                            <i class="fas fa-book text-info me-2"></i>
+                            Take notes and work through examples
+                        </div>
+                        <div class="list-group-item">
+                            <i class="fas fa-users text-warning me-2"></i>
+                            Consider joining study groups or discussions
+                        </div>
+                    {% elif resource.difficulty_level == 'intermediate' %}
+                        <div class="list-group-item">
+                            <i class="fas fa-code text-success me-2"></i>
+                            Practice with real data when possible
+                        </div>
+                        <div class="list-group-item">
+                            <i class="fas fa-link text-info me-2"></i>
+                            Connect concepts to your research area
+                        </div>
+                        <div class="list-group-item">
+                            <i class="fas fa-question text-warning me-2"></i>
+                            Discuss complex points with colleagues
+                        </div>
+                    {% else %}
+                        <div class="list-group-item">
+                            <i class="fas fa-microscope text-success me-2"></i>
+                            Focus on methodological innovations
+                        </div>
+                        <div class="list-group-item">
+                            <i class="fas fa-chart-line text-info me-2"></i>
+                            Consider implications for your research
+                        </div>
+                        <div class="list-group-item">
+                            <i class="fas fa-share text-warning me-2"></i>
+                            Share insights with research community
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Resources -->
+    <div class="ttedb-overview">
+        <h4><i class="fas fa-link text-primary me-2"></i>Explore Related Resources</h4>
+        <div class="row">
+            <div class="col-md-3">
+                <a href="{% url 'ttedb:learning_hub' %}?type={{ resource.resource_type }}" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-filter me-1"></i>Same Type
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="{% url 'ttedb:learning_hub' %}?difficulty={{ resource.difficulty_level }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-level-up-alt me-1"></i>Same Level
+                </a>
+            </div>
+            <div class="col-md-3">
+                {% if resource.tags %}
+                    {% with first_tag=resource.tags|split:","|first %}
+                        <a href="{% url 'ttedb:learning_hub' %}?q={{ first_tag|trim }}" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-tag me-1"></i>Similar Topics
+                        </a>
+                    {% endwith %}
+                {% endif %}
+            </div>
+            <div class="col-md-3">
+                <a href="{% url 'ttedb:learning_hub' %}" class="btn btn-outline-success btn-sm">
+                    <i class="fas fa-graduation-cap me-1"></i>All Resources
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Citation Information -->
+    {% if resource.doi or resource.journal %}
+        <div class="ttedb-overview">
+            <h4><i class="fas fa-quote-right text-primary me-2"></i>Citation</h4>
+            {% if resource.resource_type == 'methodological_paper' and resource.journal %}
+                <div class="alert alert-light border">
+                    <p class="mb-2">
+                        <strong>{{ resource.authors }}</strong> ({{ resource.year }}). 
+                        <em>{{ resource.title }}</em>. 
+                        {{ resource.journal }}.
+                        {% if resource.doi %} DOI: <a href="https://doi.org/{{ resource.doi }}">{{ resource.doi }}</a>{% endif %}
+                    </p>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="copyToClipboard('citation-text')">
+                        <i class="fas fa-copy me-1"></i>Copy Citation
+                    </button>
+                </div>
+            {% else %}
+                <div class="alert alert-light border">
+                    <p class="mb-2" id="citation-text">
+                        <strong>{{ resource.title }}</strong>
+                        {% if resource.authors %} by {{ resource.authors }}{% endif %}
+                        {% if resource.year %} ({{ resource.year }}){% endif %}.
+                        Retrieved from <a href="{{ resource.url }}">{{ resource.url }}</a>
+                    </p>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="copyToClipboard('citation-text')">
+                        <i class="fas fa-copy me-1"></i>Copy Citation
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    const text = element.textContent;
+    
+    navigator.clipboard.writeText(text).then(function() {
+        // Show success message
+        const button = event.target.closest('button');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
+        button.classList.add('btn-success');
+        button.classList.remove('btn-outline-secondary');
+        
+        setTimeout(function() {
+            button.innerHTML = originalText;
+            button.classList.remove('btn-success');
+            button.classList.add('btn-outline-secondary');
+        }, 2000);
+    });
+}
+</script>
+{% endblock %} 
