@@ -161,15 +161,15 @@ class PICOComparison(models.Model):
     ]
     effect_measure = models.CharField(max_length=10, choices=EFFECT_MEASURES)
     
-    # RCT estimates
-    rct_estimate = models.FloatField()
-    rct_lb = models.FloatField(help_text="Lower bound of 95% CI")
-    rct_ub = models.FloatField(help_text="Upper bound of 95% CI")
+    # RCT estimates (allowing null for cases where estimates are not available)
+    rct_estimate = models.FloatField(null=True, blank=True)
+    rct_lb = models.FloatField(null=True, blank=True, help_text="Lower bound of 95% CI")
+    rct_ub = models.FloatField(null=True, blank=True, help_text="Upper bound of 95% CI")
     
-    # TTE estimates
-    tte_estimate = models.FloatField()
-    tte_lb = models.FloatField(help_text="Lower bound of 95% CI")
-    tte_ub = models.FloatField(help_text="Upper bound of 95% CI")
+    # TTE estimates (allowing null for cases where estimates are not available)
+    tte_estimate = models.FloatField(null=True, blank=True)
+    tte_lb = models.FloatField(null=True, blank=True, help_text="Lower bound of 95% CI")
+    tte_ub = models.FloatField(null=True, blank=True, help_text="Upper bound of 95% CI")
     
     # Difference metrics (calculated)
     tte_rct_diff_estimate = models.FloatField(null=True, blank=True)
@@ -209,21 +209,30 @@ class PICOComparison(models.Model):
     @property
     def rct_ci_string(self):
         """Format RCT confidence interval as string"""
-        return f"[{self.rct_lb:.2f}, {self.rct_ub:.2f}]"
+        if self.rct_lb is not None and self.rct_ub is not None:
+            return f"[{self.rct_lb:.2f}, {self.rct_ub:.2f}]"
+        return "Not available"
     
     @property
     def tte_ci_string(self):
         """Format TTE confidence interval as string"""
-        return f"[{self.tte_lb:.2f}, {self.tte_ub:.2f}]"
+        if self.tte_lb is not None and self.tte_ub is not None:
+            return f"[{self.tte_lb:.2f}, {self.tte_ub:.2f}]"
+        return "Not available"
     
     @property
     def estimates_overlap(self):
         """Check if confidence intervals overlap"""
-        return not (self.tte_ub < self.rct_lb or self.rct_ub < self.tte_lb)
+        if all(x is not None for x in [self.tte_lb, self.tte_ub, self.rct_lb, self.rct_ub]):
+            return not (self.tte_ub < self.rct_lb or self.rct_ub < self.tte_lb)
+        return None
     
     @property
     def concordance_direction(self):
         """Check if estimates point in the same direction for ratio measures"""
+        if self.rct_estimate is None or self.tte_estimate is None:
+            return None
+            
         if self.effect_measure in ['HR', 'OR', 'RR']:
             # For ratio measures, 1.0 is the null value
             rct_direction = 'benefit' if self.rct_estimate < 1.0 else 'harm' if self.rct_estimate > 1.0 else 'null'
