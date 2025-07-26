@@ -696,4 +696,56 @@ body {
 .xera-rounded-lg { border-radius: var(--xera-radius-lg); }
 
 .xera-shadow { box-shadow: var(--xera-shadow); }
-.xera-shadow-lg { box-shadow: var(--xera-shadow-lg); } 
+.xera-shadow-lg { box-shadow: var(--xera-shadow-lg); }
+
+/* Floating Dark Theme Toggle - Universal Xera Component */
+.theme-toggle-floating {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: var(--xera-primary);
+    border: none;
+    color: white;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.theme-toggle-floating:hover {
+    background: var(--xera-primary-dark);
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.theme-toggle-floating:active {
+    transform: scale(0.95);
+}
+
+/* Dark theme adjustments for floating toggle */
+[data-bs-theme="dark"] .theme-toggle-floating {
+    background: var(--xera-primary-light);
+    color: var(--bs-dark);
+}
+
+[data-bs-theme="dark"] .theme-toggle-floating:hover {
+    background: var(--xera-primary);
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .theme-toggle-floating {
+        bottom: 15px;
+        right: 15px;
+        width: 45px;
+        height: 45px;
+        font-size: 1.1rem;
+    }
+} 
