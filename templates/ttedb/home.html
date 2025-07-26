@@ -15,6 +15,23 @@
             <p class="ttedb-hero-subtitle">
                 A comprehensive database examining concordance between target trial emulations and their corresponding randomized controlled trials
             </p>
+            
+            <!-- Search Form -->
+            <form method="get" action="{% url 'ttedb:search' %}" class="d-flex justify-content-center mb-4">
+                <div class="form-group" style="max-width: 600px; width: 100%;">
+                    <div class="d-flex">
+                        <input type="text" 
+                               name="q" 
+                               class="form-control form-control-lg me-2" 
+                               placeholder="Search by study title, author, intervention, or keywords..."
+                               style="flex: 1; background: rgba(255, 255, 255, 0.9); border: none;">
+                        <button type="submit" class="btn btn-light btn-lg">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                </div>
+            </form>
+            
             <div class="d-flex justify-content-center gap-3 mt-4">
                 <a href="{% url 'ttedb:tte_list' %}" class="btn btn-light btn-lg">
                     <i class="fas fa-flask me-2"></i>Browse TTE Studies

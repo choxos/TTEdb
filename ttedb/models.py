@@ -39,40 +39,41 @@ class TTEStudy(models.Model):
     data_url = models.URLField(max_length=500, blank=True, null=True)
     code_url = models.URLField(max_length=500, blank=True, null=True)
     
-    # Study context
-    disease = models.CharField(max_length=255)
-    disease_category = models.CharField(max_length=100)
+    # Study context and design
+    disease = models.TextField()
+    disease_category = models.CharField(max_length=100, blank=True)
     
+    # Data characteristics
     DATA_TYPES = [
-        ('claims', 'Claims'),
         ('ehr', 'Electronic Health Records'),
+        ('claims', 'Claims Database'),
         ('registry', 'Registry'),
-        ('survey', 'Survey'),
-        ('rcts', 'RCTs'),
-        ('national_database', 'National Database'),
+        ('trial', 'Trial Data'),
+        ('cohort', 'Cohort Study'),
+        ('survey', 'Survey Data'),
         ('other', 'Other'),
     ]
-    data_type = models.CharField(max_length=100, choices=DATA_TYPES)
+    data_type = models.CharField(max_length=20, choices=DATA_TYPES)
+    data_geography = models.CharField(max_length=200, blank=True)
     data_sources_n = models.IntegerField(null=True, blank=True, help_text="Number of data sources")
-    data_geography = models.CharField(max_length=255)
     
-    # Methodological approach
-    missing_method = models.CharField(max_length=255, blank=True, null=True)
-    matching_method = models.CharField(max_length=255, blank=True, null=True)
-    analysis_method = models.CharField(max_length=255, blank=True, null=True)
-    estimand = models.CharField(max_length=100, blank=True, null=True)
+    # Sample characteristics
+    eligible_sample = models.CharField(max_length=100, blank=True)
+    n_trt = models.IntegerField(null=True, blank=True, help_text="Treatment group size")
+    n_ctrl = models.IntegerField(null=True, blank=True, help_text="Control group size")
+    n_emulations = models.IntegerField(null=True, blank=True, help_text="Number of emulations")
+    trts_n = models.IntegerField(null=True, blank=True, help_text="Number of treatments")
+    n_covariates = models.IntegerField(null=True, blank=True, help_text="Number of covariates")
+    
+    # Methodology
+    missing_method = models.CharField(max_length=200, blank=True)
+    matching_method = models.CharField(max_length=200, blank=True)
+    analysis_method = models.TextField(blank=True)  # Changed from CharField to TextField
+    estimand = models.CharField(max_length=200, blank=True)
     
     # Quality indicators
     dag = models.BooleanField(default=False, help_text="Directed Acyclic Graph used")
     qba = models.BooleanField(default=False, help_text="Quantitative Bias Analysis performed")
-    
-    # Sample characteristics
-    n_covariates = models.IntegerField(null=True, blank=True)
-    trts_n = models.IntegerField(null=True, blank=True, help_text="Number of treatments")
-    eligible_sample = models.TextField(blank=True, null=True)
-    n_trt = models.IntegerField(null=True, blank=True, help_text="Number in treatment group")
-    n_ctrl = models.IntegerField(null=True, blank=True, help_text="Number in control group")
-    n_emulations = models.IntegerField(null=True, blank=True)
     
     # Target trial information
     target_trial_name = models.CharField(max_length=255, blank=True, null=True)

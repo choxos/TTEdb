@@ -181,4 +181,4 @@ LOGGING = {
 # TTEdb specific settings
 TTEDB_VERSION = '1.0.0'
 TTEDB_THEME = 'ttedb-theme'
-XERA_DB_SHARED_THEME_PATH = config('XERA_DB_SHARED_THEME_PATH', default='/Users/choxos/Documents/GitHub/xeradb/shared_theme')
+XERA_DB_SHARED_THEME_PATH = BASE_DIR / 'shared_theme'

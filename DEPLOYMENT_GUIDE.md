@@ -47,6 +47,35 @@ ALTER USER ttedb_user CREATEDB;
 \q
 ```
 
+```sql
+-- Connect to the ttedb_production database
+\c ttedb_production
+
+-- Grant permissions on the public schema
+GRANT CREATE ON SCHEMA public TO ttedb_user;
+GRANT USAGE ON SCHEMA public TO ttedb_user;
+GRANT ALL PRIVILEGES ON SCHEMA public TO ttedb_user;
+
+-- Grant all privileges on the database
+GRANT ALL PRIVILEGES ON DATABASE ttedb_production TO ttedb_user;
+
+-- Allow user to create tables and manage sequences
+ALTER USER ttedb_user CREATEDB;
+
+-- Grant permissions on all existing tables (if any)
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO ttedb_user;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO ttedb_user;
+
+-- Grant permissions on future tables
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO ttedb_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO ttedb_user;
+
+-- Exit PostgreSQL
+\q
+```
+
+
+
 ### Configure PostgreSQL for Django
 ```bash
 sudo nano /etc/postgresql/*/main/pg_hba.conf
@@ -78,8 +107,8 @@ git clone https://github.com/your-username/TTEdb.git .
 
 ### Create Virtual Environment
 ```bash
-python3 -m venv ttedb_env
-source ttedb_env/bin/activate
+python3 -m venv venv
+source venv/bin/activate
 ```
 
 ### Install Dependencies
@@ -96,14 +125,15 @@ nano .env
 Add production configuration:
 ```env
 DEBUG=False
-SECRET_KEY=your_very_secure_secret_key_here_change_this
+SECRET_KEY='$2nu&pw&b$y!1il36eyib9e3)p^nz%+b=^7pyx@eunl7z&5mf5'
 DATABASE_NAME=ttedb_production
 DATABASE_USER=ttedb_user
-DATABASE_PASSWORD=your_secure_password_here
+DATABASE_PASSWORD=Choxos10203040
 DATABASE_HOST=localhost
 DATABASE_PORT=5432
-ALLOWED_HOSTS=ttedb.xeradb.com,localhost,127.0.0.1
+ALLOWED_HOSTS=prct.xeradb.com,91.99.161.136,localhost,xeradb.com,127.0.0.1
 XERA_DB_SHARED_THEME_PATH=/var/www/html/xeradb/shared_theme
+GUNICORN_PORT=8006
 ```
 
 ### Run Migrations
@@ -137,8 +167,8 @@ After=network.target
 
 [Service]
 Type=notify
-User=www-data
-Group=www-data
+User=xeradb
+Group=xeradb
 RuntimeDirectory=gunicorn
 WorkingDirectory=/var/www/html/ttedb
 ExecStart=/var/www/html/ttedb/ttedb_env/bin/gunicorn \

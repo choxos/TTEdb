@@ -156,6 +156,102 @@
 .breadcrumb-item.active {
     color: var(--xera-primary-600);
 }
+
+/* Header Search Styles */
+.xera-header-search {
+    margin-left: auto;
+    margin-right: 1rem;
+}
+
+.xera-search-form {
+    margin: 0;
+}
+
+.xera-search-input-group {
+    display: flex;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.xera-search-input {
+    background: transparent;
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    width: 200px;
+    outline: none;
+}
+
+.xera-search-input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.xera-search-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.xera-search-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Dark Theme Toggle Styles */
+.xera-theme-toggle {
+    margin-left: 1rem;
+}
+
+.xera-theme-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.xera-theme-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+/* Dark theme styles */
+[data-bs-theme="dark"] {
+    --bs-body-bg: #212529;
+    --bs-body-color: #adb5bd;
+}
+
+[data-bs-theme="dark"] .ttedb-hero-section {
+    background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+}
+
+[data-bs-theme="dark"] .ttedb-overview,
+[data-bs-theme="dark"] .ttedb-search-bar,
+[data-bs-theme="dark"] .ttedb-table {
+    background: var(--bs-dark);
+    color: var(--bs-light);
+}
+
+[data-bs-theme="dark"] .card {
+    background: var(--bs-dark);
+    border-color: var(--bs-dark-border-subtle);
+}
+
+[data-bs-theme="dark"] .btn-outline-primary {
+    border-color: var(--xera-primary);
+    color: var(--xera-primary);
+}
+
+[data-bs-theme="dark"] .btn-outline-primary:hover {
+    background: var(--xera-primary);
+    border-color: var(--xera-primary);
+}
 </style>
 {% endblock %}
 
@@ -169,6 +265,33 @@ document.addEventListener('DOMContentLoaded', function() {
     if (searchForm) {
         // Add search enhancements here
     }
+    
+    // Dark theme toggle functionality
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+    const htmlElement = document.documentElement;
+    
+    // Check for saved theme preference or default to light mode
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    htmlElement.setAttribute('data-bs-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+    
+    themeToggle.addEventListener('click', function() {
+        const currentTheme = htmlElement.getAttribute('data-bs-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        htmlElement.setAttribute('data-bs-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateThemeIcon(newTheme);
+    });
+    
+    function updateThemeIcon(theme) {
+        if (theme === 'dark') {
+            themeIcon.className = 'fas fa-sun';
+        } else {
+            themeIcon.className = 'fas fa-moon';
+        }
+    }
 });
 </script>
 {% endblock %}
@@ -178,7 +301,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <a href="{% url 'ttedb:home' %}" class="xera-nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
         <i class="fas fa-home me-1"></i>Home
     </a>
-    <a href="{% url 'ttedb:tte_list' %}" class="xera-nav-link {% if 'tte' in request.resolver_match.url_name and 'vs-rct' not in request.resolver_match.url_name %}active{% endif %}">
+    <a href="{% url 'ttedb:tte_list' %}" class="xera-nav-link {% if 'tte_list' in request.resolver_match.url_name %}active{% endif %}">
         <i class="fas fa-flask me-1"></i>TTE Studies
     </a>
     <a href="{% url 'ttedb:tte_vs_rct' %}" class="xera-nav-link {% if 'tte_vs_rct' in request.resolver_match.url_name %}active{% endif %}">
@@ -197,6 +320,30 @@ document.addEventListener('DOMContentLoaded', function() {
         <i class="fas fa-code me-1"></i>API
     </a>
 </nav>
+
+<!-- Header Search Form -->
+<div class="xera-header-search">
+    <form method="get" action="{% url 'ttedb:search' %}" class="xera-search-form">
+        <div class="xera-search-input-group">
+            <input type="text" 
+                   name="q" 
+                   class="xera-search-input" 
+                   placeholder="Search studies..." 
+                   value="{{ request.GET.q|default:'' }}"
+                   aria-label="Search TTE studies">
+            <button type="submit" class="xera-search-btn" aria-label="Search">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Dark Theme Toggle -->
+<div class="xera-theme-toggle">
+    <button id="theme-toggle" class="xera-theme-btn" aria-label="Toggle dark mode">
+        <i class="fas fa-moon" id="theme-icon"></i>
+    </button>
+</div>
 {% endblock %}
 
 {% block app_logo %}
