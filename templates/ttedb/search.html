@@ -1,0 +1,556 @@
+{% extends "ttedb/base.html" %}
+{% load static %}
+{% load ttedb_extras %}
+
+{% block title %}Advanced Search - TTEdb{% endblock %}
+{% block page_title %}Advanced Search{% endblock %}
+
+{% block meta_description %}Advanced search for Target Trial Emulation studies with PICO elements (Population, Intervention, Comparison, Outcome) and comprehensive filtering options.{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Search Header -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h1 class="h3 mb-0"><i class="fas fa-search me-2"></i>Advanced Search</h1>
+            <p class="text-muted mb-0">Search TTE studies by PICO elements and other criteria</p>
+        </div>
+    </div>
+    
+    <!-- Advanced Search Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" action="{% url 'ttedb:search' %}">
+                <!-- General Search -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <label for="q" class="form-label fw-bold">General Search</label>
+                        <input type="text" 
+                               id="q" 
+                               name="q" 
+                               class="form-control form-control-lg" 
+                               value="{{ query }}"
+                               placeholder="Search by author, title, disease, journal, institution...">
+                        <small class="text-muted">Search across all study fields</small>
+                    </div>
+                </div>
+                
+                <!-- PICO Elements Section -->
+                <div class="border rounded p-3 mb-4" style="background-color: var(--xera-primary-50);">
+                    <h5 class="text-primary mb-3"><i class="fas fa-search-plus me-2"></i>PICO Elements</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="population" class="form-label">
+                                <strong>Population</strong>
+                                <i class="fas fa-users text-primary ms-1"></i>
+                            </label>
+                            <input type="text" 
+                                   id="population" 
+                                   name="population" 
+                                   class="form-control" 
+                                   value="{{ population }}"
+                                   placeholder="e.g., diabetes patients, adults, elderly..."
+                                   list="population-examples">
+                            <datalist id="population-examples">
+                                <option value="diabetes patients">
+                                <option value="cardiovascular disease patients">
+                                <option value="elderly">
+                                <option value="adults">
+                                <option value="cancer patients">
+                                <option value="hypertensive patients">
+                            </datalist>
+                            <small class="text-muted">Target population or participants</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="intervention" class="form-label">
+                                <strong>Intervention</strong>
+                                <i class="fas fa-pills text-success ms-1"></i>
+                            </label>
+                            <input type="text" 
+                                   id="intervention" 
+                                   name="intervention" 
+                                   class="form-control" 
+                                   value="{{ intervention }}"
+                                   placeholder="e.g., metformin, statin, surgery..."
+                                   list="intervention-examples">
+                            <datalist id="intervention-examples">
+                                <option value="metformin">
+                                <option value="statin">
+                                <option value="ACE inhibitor">
+                                <option value="beta blocker">
+                                <option value="insulin">
+                                <option value="chemotherapy">
+                                <option value="surgery">
+                                <option value="lifestyle intervention">
+                            </datalist>
+                            <small class="text-muted">Treatment or intervention studied</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="comparison" class="form-label">
+                                <strong>Comparison</strong>
+                                <i class="fas fa-balance-scale text-warning ms-1"></i>
+                            </label>
+                            <input type="text" 
+                                   id="comparison" 
+                                   name="comparison" 
+                                   class="form-control" 
+                                   value="{{ comparison }}"
+                                   placeholder="e.g., placebo, standard care, no treatment..."
+                                   list="comparison-examples">
+                            <datalist id="comparison-examples">
+                                <option value="placebo">
+                                <option value="standard care">
+                                <option value="no treatment">
+                                <option value="usual care">
+                                <option value="control">
+                                <option value="alternative intervention">
+                            </datalist>
+                            <small class="text-muted">Comparator or control group</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="outcome" class="form-label">
+                                <strong>Outcome</strong>
+                                <i class="fas fa-chart-line text-info ms-1"></i>
+                            </label>
+                            <input type="text" 
+                                   id="outcome" 
+                                   name="outcome" 
+                                   class="form-control" 
+                                   value="{{ outcome }}"
+                                   placeholder="e.g., mortality, cardiovascular events, HbA1c..."
+                                   list="outcome-examples">
+                            <datalist id="outcome-examples">
+                                <option value="mortality">
+                                <option value="cardiovascular events">
+                                <option value="HbA1c">
+                                <option value="blood pressure">
+                                <option value="survival">
+                                <option value="hospitalization">
+                                <option value="quality of life">
+                                <option value="adverse events">
+                                <option value="stroke">
+                                <option value="myocardial infarction">
+                            </datalist>
+                            <small class="text-muted">Primary or secondary outcomes</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Additional Filters -->
+                <div class="row mb-4">
+                    <div class="col-md-4 mb-3">
+                        <label for="disease_category" class="form-label">Disease Category</label>
+                        <select id="disease_category" name="disease_category" class="form-select">
+                            <option value="">All Categories</option>
+                            {% for category in disease_categories %}
+                                {% if category %}
+                                <option value="{{ category }}" {% if category == disease_category %}selected{% endif %}>
+                                    {{ category }}
+                                </option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="data_type" class="form-label">Data Type</label>
+                        <select id="data_type" name="data_type" class="form-select">
+                            <option value="">All Types</option>
+                            {% for dtype in data_types %}
+                                {% if dtype %}
+                                <option value="{{ dtype }}" {% if dtype == data_type %}selected{% endif %}>
+                                    {{ dtype|title }}
+                                </option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Publication Year Range</label>
+                        <div class="row">
+                            <div class="col-6">
+                                <input type="number" 
+                                       name="year_from" 
+                                       class="form-control" 
+                                       value="{{ year_from }}"
+                                       placeholder="From"
+                                       min="2000"
+                                       max="2024">
+                            </div>
+                            <div class="col-6">
+                                <input type="number" 
+                                       name="year_to" 
+                                       class="form-control" 
+                                       value="{{ year_to }}"
+                                       placeholder="To"
+                                       min="2000"
+                                       max="2024">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Search Buttons -->
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-search me-2"></i>Search
+                    </button>
+                    <a href="{% url 'ttedb:search' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-times me-2"></i>Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Search Results Summary -->
+    {% if query or population or intervention or comparison or outcome or disease_category or data_type or year_from or year_to %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Search Results:</strong>
+                Found {{ total_studies }} TTE studies, {{ total_picos }} PICO comparisons
+                {% if total_resources %}, and {{ total_resources }} learning resources{% endif %}
+                {% if query %}matching "{{ query }}"{% endif %}
+                {% if population or intervention or comparison or outcome %}
+                    with PICO elements
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Results Tabs -->
+    {% if query or population or intervention or comparison or outcome or disease_category or data_type or year_from or year_to %}
+    <div class="card">
+        <div class="card-header">
+            <ul class="nav nav-tabs card-header-tabs" id="searchResultsTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="studies-tab" data-bs-toggle="tab" data-bs-target="#studies" type="button" role="tab">
+                        <i class="fas fa-flask me-2"></i>TTE Studies ({{ total_studies }})
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="picos-tab" data-bs-toggle="tab" data-bs-target="#picos" type="button" role="tab">
+                        <i class="fas fa-list me-2"></i>PICO Comparisons ({{ total_picos }})
+                    </button>
+                </li>
+                {% if resources %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="resources-tab" data-bs-toggle="tab" data-bs-target="#resources" type="button" role="tab">
+                        <i class="fas fa-graduation-cap me-2"></i>Learning Resources ({{ total_resources }})
+                    </button>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+        
+        <div class="card-body">
+            <div class="tab-content" id="searchResultsTabContent">
+                <!-- Studies Tab -->
+                <div class="tab-pane fade show active" id="studies" role="tabpanel">
+                    {% if studies %}
+                        <div class="row">
+                            {% for study in studies %}
+                            <div class="col-12 mb-3">
+                                <div class="card h-100 border-start border-primary border-3">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h5 class="card-title mb-1">
+                                                <a href="{% url 'ttedb:tte_detail' study.slug %}" class="text-decoration-none">
+                                                    {{ study.first_author }} ({{ study.year }})
+                                                </a>
+                                            </h5>
+                                            <div class="d-flex gap-1">
+                                                {% if study.has_transparency_indicators %}
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check-circle"></i> Transparent
+                                                    </span>
+                                                {% endif %}
+                                                {% if study.dag_availability %}
+                                                    <span class="badge bg-info">
+                                                        <i class="fas fa-project-diagram"></i> DAG
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        
+                                        <p class="card-text text-muted mb-2">
+                                            <strong>Disease:</strong> {{ study.disease|truncatechars:100 }}<br>
+                                            <strong>Institution:</strong> {{ study.institution|truncatechars:80 }}<br>
+                                            <strong>Data Type:</strong> {{ study.data_type|title }}
+                                        </p>
+                                        
+                                        <div class="d-flex flex-wrap gap-1 mb-2">
+                                            <span class="badge bg-light text-dark">{{ study.disease_category }}</span>
+                                            <span class="badge bg-light text-dark">{{ study.data_type|title }}</span>
+                                            {% if study.total_sample_size %}
+                                            <span class="badge bg-primary">n={{ study.total_sample_size|floatformat:0 }}</span>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <small class="text-muted">
+                                            {{ study.picocomparison_set.count }} PICO comparison{{ study.picocomparison_set.count|pluralize }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Studies Pagination -->
+                        {% if studies.has_other_pages %}
+                        <nav aria-label="Studies pagination">
+                            <ul class="pagination justify-content-center">
+                                {% if studies.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'studies_page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}studies_page={{ studies.previous_page_number }}">Previous</a>
+                                    </li>
+                                {% endif %}
+                                
+                                <li class="page-item active">
+                                    <span class="page-link">{{ studies.number }} of {{ studies.paginator.num_pages }}</span>
+                                </li>
+                                
+                                {% if studies.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'studies_page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}studies_page={{ studies.next_page_number }}">Next</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No studies found</h5>
+                            <p class="text-muted">Try adjusting your search criteria</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- PICO Comparisons Tab -->
+                <div class="tab-pane fade" id="picos" role="tabpanel">
+                    {% if picos %}
+                        <div class="row">
+                            {% for pico in picos %}
+                            <div class="col-12 mb-3">
+                                <div class="card h-100 border-start border-success border-3">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="card-title mb-1">
+                                                <a href="{% url 'ttedb:tte_detail' pico.tte_study.slug %}" class="text-decoration-none">
+                                                    {{ pico.tte_study.first_author }} ({{ pico.tte_study.year }})
+                                                </a>
+                                                {% if pico.target_trial_name %}
+                                                <br><small class="text-muted">Target Trial: {{ pico.target_trial_name }}</small>
+                                                {% endif %}
+                                            </h6>
+                                            {% if pico.concordance_direction %}
+                                            <span class="badge {% if pico.concordance_direction == 'Concordant' %}bg-success{% elif pico.concordance_direction == 'Discordant' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                                                {{ pico.concordance_direction }}
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="row text-sm">
+                                            <div class="col-md-6">
+                                                <strong class="text-primary">Population:</strong><br>
+                                                <span class="text-muted">{{ pico.population|truncatechars:80 }}</span>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <strong class="text-success">Intervention:</strong><br>
+                                                <span class="text-muted">{{ pico.intervention|truncatechars:80 }}</span>
+                                            </div>
+                                            <div class="col-md-6 mt-2">
+                                                <strong class="text-warning">Comparison:</strong><br>
+                                                <span class="text-muted">{{ pico.comparison|truncatechars:80 }}</span>
+                                            </div>
+                                            <div class="col-md-6 mt-2">
+                                                <strong class="text-info">Outcome:</strong><br>
+                                                <span class="text-muted">{{ pico.outcome|truncatechars:80 }}</span>
+                                            </div>
+                                        </div>
+                                        
+                                        {% if pico.rct_estimate and pico.tte_estimate %}
+                                        <div class="mt-3 p-2 bg-light rounded">
+                                            <small>
+                                                <strong>RCT:</strong> {{ pico.rct_estimate }} {{ pico.rct_ci_string }} |
+                                                <strong>TTE:</strong> {{ pico.tte_estimate }} {{ pico.tte_ci_string }}
+                                                {% if pico.effect_measure %}({{ pico.effect_measure }}){% endif %}
+                                            </small>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- PICO Pagination -->
+                        {% if picos.has_other_pages %}
+                        <nav aria-label="PICO comparisons pagination">
+                            <ul class="pagination justify-content-center">
+                                {% if picos.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'picos_page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}picos_page={{ picos.previous_page_number }}">Previous</a>
+                                    </li>
+                                {% endif %}
+                                
+                                <li class="page-item active">
+                                    <span class="page-link">{{ picos.number }} of {{ picos.paginator.num_pages }}</span>
+                                </li>
+                                
+                                {% if picos.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'picos_page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}picos_page={{ picos.next_page_number }}">Next</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-list fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No PICO comparisons found</h5>
+                            <p class="text-muted">Try adjusting your PICO search criteria</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Learning Resources Tab -->
+                {% if resources %}
+                <div class="tab-pane fade" id="resources" role="tabpanel">
+                    <div class="row">
+                        {% for resource in resources %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100 border-start border-info border-3">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <a href="{% url 'ttedb:learning_resource_detail' resource.id %}" class="text-decoration-none">
+                                            {{ resource.title|truncatechars:60 }}
+                                        </a>
+                                    </h6>
+                                    <p class="card-text">{{ resource.description|truncatechars:100 }}</p>
+                                    <div class="d-flex flex-wrap gap-1">
+                                        <span class="badge bg-light text-dark">{{ resource.resource_type|title }}</span>
+                                        <span class="badge bg-light text-dark">{{ resource.difficulty_level|title }}</span>
+                                        {% if resource.year %}
+                                        <span class="badge bg-primary">{{ resource.year }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- No Search Performed -->
+    <div class="text-center py-5">
+        <i class="fas fa-search fa-4x text-muted mb-4"></i>
+        <h3 class="text-muted mb-3">Advanced Search</h3>
+        <p class="text-muted lead">Use the form above to search across TTE studies by PICO elements and other criteria.</p>
+        <div class="row mt-5">
+            <div class="col-md-3 mb-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                        <h6>Population</h6>
+                        <small class="text-muted">Search by study population</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-pills fa-2x text-success mb-2"></i>
+                        <h6>Intervention</h6>
+                        <small class="text-muted">Find specific treatments</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-balance-scale fa-2x text-warning mb-2"></i>
+                        <h6>Comparison</h6>
+                        <small class="text-muted">Search by comparators</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-chart-line fa-2x text-info mb-2"></i>
+                        <h6>Outcome</h6>
+                        <small class="text-muted">Find by outcomes studied</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus on search input if no search has been performed
+    const query = '{{ query|escapejs }}';
+    if (!query) {
+        document.getElementById('q').focus();
+    }
+    
+    // Form validation
+    const searchForm = document.querySelector('form');
+    if (searchForm) {
+        searchForm.addEventListener('submit', function(e) {
+            const allInputs = searchForm.querySelectorAll('input[type="text"], input[type="number"], select');
+            let hasValue = false;
+            
+            for (let input of allInputs) {
+                if (input.value.trim()) {
+                    hasValue = true;
+                    break;
+                }
+            }
+            
+            if (!hasValue) {
+                e.preventDefault();
+                alert('Please enter at least one search criterion.');
+                return false;
+            }
+        });
+    }
+    
+    // Highlight search terms in results
+    const searchTerms = [
+        '{{ query|escapejs }}',
+        '{{ population|escapejs }}',
+        '{{ intervention|escapejs }}',
+        '{{ comparison|escapejs }}',
+        '{{ outcome|escapejs }}'
+    ].filter(term => term.length > 0);
+    
+    if (searchTerms.length > 0) {
+        const results = document.querySelectorAll('.card-body');
+        results.forEach(result => {
+            let html = result.innerHTML;
+            searchTerms.forEach(term => {
+                if (term.length > 2) {
+                    const regex = new RegExp(`(${term})`, 'gi');
+                    html = html.replace(regex, '<mark>$1</mark>');
+                }
+            });
+            result.innerHTML = html;
+        });
+    }
+});
+</script>
+{% endblock %} 

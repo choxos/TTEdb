@@ -173,6 +173,7 @@
     overflow: hidden;
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
 }
 
 .xera-search-input {
@@ -199,6 +200,40 @@
 
 .xera-search-btn:hover {
     background: rgba(255, 255, 255, 0.3);
+}
+
+.xera-search-btn.dropdown-toggle {
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.5rem 0.75rem;
+}
+
+.xera-search-btn.dropdown-toggle:after {
+    display: none;
+}
+
+.xera-header-search .dropdown-menu {
+    margin-top: 0.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    border: 1px solid rgba(0,0,0,0.1);
+    min-width: 200px;
+}
+
+.xera-header-search .dropdown-item {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+.xera-header-search .dropdown-item:hover {
+    background-color: var(--xera-primary-100);
+    color: var(--xera-primary-800);
+}
+
+.xera-header-search .dropdown-header {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--xera-primary);
+    padding: 0.5rem 1rem 0.25rem;
 }
 
 /* Dark Theme Toggle Styles */
@@ -321,22 +356,43 @@ document.addEventListener('DOMContentLoaded', function() {
     </a>
 </nav>
 
-<!-- Header Search Form -->
-<div class="xera-header-search">
-    <form method="get" action="{% url 'ttedb:search' %}" class="xera-search-form">
-        <div class="xera-search-input-group">
-            <input type="text" 
-                   name="q" 
-                   class="xera-search-input" 
-                   placeholder="Search studies..." 
-                   value="{{ request.GET.q|default:'' }}"
-                   aria-label="Search TTE studies">
-            <button type="submit" class="xera-search-btn" aria-label="Search">
-                <i class="fas fa-search"></i>
-            </button>
-        </div>
-    </form>
-</div>
+    <!-- Header Search Form -->
+    <div class="xera-header-search">
+        <form method="get" action="{% url 'ttedb:search' %}" class="xera-search-form">
+            <div class="xera-search-input-group">
+                <input type="text" 
+                       name="q" 
+                       class="xera-search-input" 
+                       placeholder="Search studies..." 
+                       value="{{ request.GET.q|default:'' }}"
+                       aria-label="Search TTE studies">
+                <button type="submit" class="xera-search-btn" aria-label="Search">
+                    <i class="fas fa-search"></i>
+                </button>
+                <div class="dropdown">
+                    <button class="xera-search-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Search options">
+                        <i class="fas fa-caret-down"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><h6 class="dropdown-header">Quick PICO Search</h6></li>
+                        <li><a class="dropdown-item" href="{% url 'ttedb:search' %}?population=diabetes">
+                            <i class="fas fa-users me-2"></i>Diabetes Population
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'ttedb:search' %}?intervention=metformin">
+                            <i class="fas fa-pills me-2"></i>Metformin Intervention
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'ttedb:search' %}?outcome=mortality">
+                            <i class="fas fa-chart-line me-2"></i>Mortality Outcome
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'ttedb:search' %}">
+                            <i class="fas fa-search-plus me-2"></i>Advanced PICO Search
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </form>
+    </div>
 
 <!-- Dark Theme Toggle -->
 <div class="xera-theme-toggle">

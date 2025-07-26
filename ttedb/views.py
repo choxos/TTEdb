@@ -282,40 +282,127 @@ def about(request):
 
 
 def search(request):
-    """Global search across all content"""
+    """Advanced search with PICO elements and filters"""
+    # Get search parameters
     query = request.GET.get('q', '')
-    results = {}
+    population = request.GET.get('population', '')
+    intervention = request.GET.get('intervention', '')
+    comparison = request.GET.get('comparison', '')
+    outcome = request.GET.get('outcome', '')
+    disease_category = request.GET.get('disease_category', '')
+    data_type = request.GET.get('data_type', '')
+    year_from = request.GET.get('year_from', '')
+    year_to = request.GET.get('year_to', '')
     
+    # Start with all studies and PICO comparisons
+    studies = TTEStudy.objects.all()
+    picos = PICOComparison.objects.select_related('tte_study')
+    
+    # Apply general search query
     if query:
-        # Search studies
-        studies = TTEStudy.objects.filter(
+        studies = studies.filter(
             Q(first_author__icontains=query) |
             Q(disease__icontains=query) |
-            Q(disease_category__icontains=query)
-        )[:10]
+            Q(disease_category__icontains=query) |
+            Q(institution__icontains=query) |
+            Q(journal__icontains=query) |
+            Q(title__icontains=query)
+        )
         
-        # Search PICO comparisons
-        picos = PICOComparison.objects.filter(
+        picos = picos.filter(
             Q(target_trial_name__icontains=query) |
+            Q(population__icontains=query) |
+            Q(intervention__icontains=query) |
+            Q(comparison__icontains=query) |
             Q(outcome__icontains=query) |
-            Q(population__icontains=query)
-        )[:10]
-        
-        # Search learning resources
+            Q(tte_study__first_author__icontains=query) |
+            Q(tte_study__disease__icontains=query)
+        )
+    
+    # Apply PICO-specific filters
+    if population:
+        picos = picos.filter(population__icontains=population)
+        studies = studies.filter(picocomparison__population__icontains=population).distinct()
+    
+    if intervention:
+        picos = picos.filter(intervention__icontains=intervention)
+        studies = studies.filter(picocomparison__intervention__icontains=intervention).distinct()
+    
+    if comparison:
+        picos = picos.filter(comparison__icontains=comparison)
+        studies = studies.filter(picocomparison__comparison__icontains=comparison).distinct()
+    
+    if outcome:
+        picos = picos.filter(outcome__icontains=outcome)
+        studies = studies.filter(picocomparison__outcome__icontains=outcome).distinct()
+    
+    # Apply additional filters
+    if disease_category:
+        studies = studies.filter(disease_category__icontains=disease_category)
+        picos = picos.filter(tte_study__disease_category__icontains=disease_category)
+    
+    if data_type:
+        studies = studies.filter(data_type__icontains=data_type)
+        picos = picos.filter(tte_study__data_type__icontains=data_type)
+    
+    if year_from:
+        try:
+            year_from_int = int(year_from)
+            studies = studies.filter(year__gte=year_from_int)
+            picos = picos.filter(tte_study__year__gte=year_from_int)
+        except ValueError:
+            pass
+    
+    if year_to:
+        try:
+            year_to_int = int(year_to)
+            studies = studies.filter(year__lte=year_to_int)
+            picos = picos.filter(tte_study__year__lte=year_to_int)
+        except ValueError:
+            pass
+    
+    # Get filter options for the form
+    disease_categories = TTEStudy.objects.values_list('disease_category', flat=True).distinct().order_by('disease_category')
+    data_types = TTEStudy.objects.values_list('data_type', flat=True).distinct().order_by('data_type')
+    
+    # Search learning resources if general query provided
+    resources = []
+    if query:
         resources = LearningResource.objects.filter(
             Q(title__icontains=query) |
             Q(description__icontains=query) |
             Q(tags__icontains=query)
         )[:10]
-        
-        results = {
-            'studies': studies,
-            'picos': picos,
-            'resources': resources,
-        }
+    
+    # Pagination
+    from django.core.paginator import Paginator
+    
+    studies_paginator = Paginator(studies, 20)
+    picos_paginator = Paginator(picos, 20)
+    
+    studies_page = request.GET.get('studies_page')
+    picos_page = request.GET.get('picos_page')
+    
+    studies = studies_paginator.get_page(studies_page)
+    picos = picos_paginator.get_page(picos_page)
     
     context = {
         'query': query,
-        'results': results,
+        'population': population,
+        'intervention': intervention,
+        'comparison': comparison,
+        'outcome': outcome,
+        'disease_category': disease_category,
+        'data_type': data_type,
+        'year_from': year_from,
+        'year_to': year_to,
+        'studies': studies,
+        'picos': picos,
+        'resources': resources,
+        'disease_categories': disease_categories,
+        'data_types': data_types,
+        'total_studies': studies.paginator.count if studies else 0,
+        'total_picos': picos.paginator.count if picos else 0,
+        'total_resources': len(resources),
     }
     return render(request, 'ttedb/search.html', context)
