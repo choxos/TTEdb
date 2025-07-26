@@ -55,36 +55,43 @@
     <!-- Xera DB Unified Header -->
     <header class="xera-header">
         <div class="xera-header-container">
-            <a href="{% url 'tracker:home' %}" class="xera-logo">
+            {% block app_logo %}
+            <a href="{% url 'ttedb:home' %}" class="xera-logo">
                 <div class="xera-logo-icon">
-                    <i class="fas fa-microscope"></i>
+                    <i class="fas fa-flask"></i>
                 </div>
                 <div class="xera-app-name">
-                    <div class="xera-app-title">OST</div>
-                    <div class="xera-app-subtitle">Open Science Tracker</div>
+                    <div class="xera-app-title">TTEdb</div>
+                    <div class="xera-app-subtitle">Target Trial Emulation Database</div>
                 </div>
             </a>
+            {% endblock %}
             
+            {% block header_nav %}
             <nav class="xera-nav">
-                <a href="{% url 'tracker:home' %}" class="xera-nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                <a href="{% url 'ttedb:home' %}" class="xera-nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
                     <i class="fas fa-home me-1"></i>Home
                 </a>
-                <a href="{% url 'tracker:paper_list' %}" class="xera-nav-link {% if 'paper' in request.resolver_match.url_name %}active{% endif %}">
-                    <i class="fas fa-file-alt me-1"></i>Papers
+                <a href="{% url 'ttedb:tte_list' %}" class="xera-nav-link {% if 'tte_list' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-flask me-1"></i>TTE Studies
                 </a>
-                <a href="{% url 'tracker:journal_list' %}" class="xera-nav-link {% if 'journal' in request.resolver_match.url_name %}active{% endif %}">
-                    <i class="fas fa-book me-1"></i>Journals
+                <a href="{% url 'ttedb:tte_vs_rct' %}" class="xera-nav-link {% if 'tte_vs_rct' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-balance-scale me-1"></i>TTE vs RCT
                 </a>
-                <a href="{% url 'tracker:field_list' %}" class="xera-nav-link {% if 'field' in request.resolver_match.url_name %}active{% endif %}">
-                    <i class="fas fa-tags me-1"></i>Fields
+                <a href="{% url 'ttedb:learning_hub' %}" class="xera-nav-link {% if 'learning_hub' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-graduation-cap me-1"></i>Learning Hub
                 </a>
-                <a href="{% url 'tracker:statistics' %}" class="xera-nav-link {% if 'statistics' in request.resolver_match.url_name %}active{% endif %}">
+                <a href="{% url 'ttedb:statistics' %}" class="xera-nav-link {% if 'statistics' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-chart-bar me-1"></i>Statistics
+                </a>
+                <a href="{% url 'ttedb:about' %}" class="xera-nav-link {% if 'about' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-info-circle me-1"></i>About
                 </a>
                 <a href="/api/" class="xera-nav-link" target="_blank">
                     <i class="fas fa-code me-1"></i>API
                 </a>
             </nav>
+            {% endblock %}
         </div>
     </header>
 
@@ -97,7 +104,7 @@
             <nav aria-label="breadcrumb" class="mb-4">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item">
-                        <a href="{% url 'tracker:home' %}">
+                        <a href="{% url 'ttedb:home' %}">
                             <i class="fas fa-home me-1"></i>Home
                         </a>
                     </li>
