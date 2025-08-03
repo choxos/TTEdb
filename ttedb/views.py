@@ -193,6 +193,9 @@ def learning_resource_detail(request, resource_id):
 
 def statistics(request):
     """Statistics page with database analytics"""
+    from django.db.models import Count, Q, Avg, Max, Min
+    import json
+    
     # Get pre-calculated statistics
     overview_stats = DatabaseStatistic.objects.filter(statistic_type='overview')
     tte_vs_rct_stats = DatabaseStatistic.objects.filter(statistic_type='tte_vs_rct')
@@ -202,24 +205,232 @@ def statistics(request):
     total_studies = TTEStudy.objects.count()
     total_comparisons = PICOComparison.objects.count()
     
+    # ===== TTE STUDIES ONLY ANALYTICS =====
+    
     # Disease distribution
     disease_distribution = TTEStudy.objects.values('disease_category').annotate(
         count=Count('id')
     ).order_by('-count')
     
+    # Publication timeline by year
+    publication_timeline = TTEStudy.objects.values('year').annotate(
+        count=Count('id')
+    ).order_by('year')
+    
+    # Data type distribution
+    data_type_distribution = TTEStudy.objects.values('data_type').annotate(
+        count=Count('id')
+    ).order_by('-count')
+    
+    # Geographic distribution (top 10)
+    geographic_distribution = TTEStudy.objects.exclude(
+        data_geography__isnull=True
+    ).exclude(data_geography__exact='').values('data_geography').annotate(
+        count=Count('id')
+    ).order_by('-count')[:10]
+    
+    # Institution type distribution
+    institution_type_distribution = TTEStudy.objects.exclude(
+        institution_type__isnull=True
+    ).values('institution_type').annotate(
+        count=Count('id')
+    ).order_by('-count')
+    
+    # Methodology usage over time
+    methodology_timeline = []
+    for year_data in publication_timeline:
+        year = year_data['year']
+        year_studies = TTEStudy.objects.filter(year=year)
+        total_year = year_studies.count()
+        if total_year > 0:
+            methodology_timeline.append({
+                'year': year,
+                'dag_percentage': (year_studies.filter(dag=True).count() / total_year) * 100,
+                'qba_percentage': (year_studies.filter(qba=True).count() / total_year) * 100,
+                'both_percentage': (year_studies.filter(dag=True, qba=True).count() / total_year) * 100,
+            })
+    
+    # Sample size statistics
+    sample_size_stats = TTEStudy.objects.exclude(
+        n_trt__isnull=True, n_ctrl__isnull=True
+    ).aggregate(
+        avg_treatment=Avg('n_trt'),
+        avg_control=Avg('n_ctrl'),
+        max_treatment=Max('n_trt'),
+        max_control=Max('n_ctrl'),
+        min_treatment=Min('n_trt'),
+        min_control=Min('n_ctrl'),
+    )
+    
+    # Sample size distribution (binned)
+    sample_size_ranges = [
+        ('1-100', 1, 100),
+        ('101-500', 101, 500),
+        ('501-1000', 501, 1000),
+        ('1001-5000', 1001, 5000),
+        ('5001-10000', 5001, 10000),
+        ('10000+', 10001, 999999),
+    ]
+    
+    sample_size_distribution = []
+    for range_label, min_size, max_size in sample_size_ranges:
+        count = TTEStudy.objects.filter(
+            Q(n_trt__gte=min_size, n_trt__lte=max_size) |
+            Q(n_ctrl__gte=min_size, n_ctrl__lte=max_size)
+        ).count()
+        sample_size_distribution.append({
+            'range': range_label,
+            'count': count
+        })
+    
+    # Analytical methods distribution
+    analysis_methods = TTEStudy.objects.exclude(
+        analysis_method__isnull=True
+    ).exclude(analysis_method__exact='').values('analysis_method').annotate(
+        count=Count('id')
+    ).order_by('-count')[:10]
+    
+    # Matching methods distribution
+    matching_methods = TTEStudy.objects.exclude(
+        matching_method__isnull=True
+    ).exclude(matching_method__exact='').values('matching_method').annotate(
+        count=Count('id')
+    ).order_by('-count')[:10]
+    
+    # ===== TTE VS RCT COMPARISON ANALYTICS =====
+    
+    studies_with_comparisons = TTEStudy.objects.filter(
+        pico_comparisons__isnull=False
+    ).distinct()
+    
+    # Concordance by effect measure
+    effect_measure_concordance = []
+    for effect_measure, _ in PICOComparison.EFFECT_MEASURES:
+        comparisons = PICOComparison.objects.filter(
+            effect_measure=effect_measure,
+            rct_estimate__isnull=False,
+            tte_estimate__isnull=False
+        )
+        total = comparisons.count()
+        if total > 0:
+            # Calculate overlapping CIs
+            overlapping = sum(1 for comp in comparisons if comp.estimates_overlap)
+            # Calculate same direction
+            same_direction = sum(1 for comp in comparisons if comp.concordance_direction)
+            
+            effect_measure_concordance.append({
+                'measure': effect_measure,
+                'total_comparisons': total,
+                'ci_overlap_rate': (overlapping / total) * 100 if overlapping is not None else 0,
+                'direction_concordance_rate': (same_direction / total) * 100 if same_direction is not None else 0,
+            })
+    
+    # Concordance by disease category
+    disease_concordance = []
+    for disease_cat in studies_with_comparisons.values_list('disease_category', flat=True).distinct():
+        if disease_cat:
+            comparisons = PICOComparison.objects.filter(
+                tte_study__disease_category=disease_cat,
+                rct_estimate__isnull=False,
+                tte_estimate__isnull=False
+            )
+            total = comparisons.count()
+            if total > 0:
+                overlapping = sum(1 for comp in comparisons if comp.estimates_overlap)
+                same_direction = sum(1 for comp in comparisons if comp.concordance_direction)
+                
+                disease_concordance.append({
+                    'disease_category': disease_cat,
+                    'total_comparisons': total,
+                    'ci_overlap_rate': (overlapping / total) * 100 if overlapping is not None else 0,
+                    'direction_concordance_rate': (same_direction / total) * 100 if same_direction is not None else 0,
+                })
+    
+    # Effect measure usage over time
+    effect_measure_timeline = []
+    for year_data in publication_timeline:
+        year = year_data['year']
+        year_comparisons = PICOComparison.objects.filter(tte_study__year=year)
+        total_year = year_comparisons.count()
+        if total_year > 0:
+            measures = {}
+            for effect_measure, _ in PICOComparison.EFFECT_MEASURES:
+                count = year_comparisons.filter(effect_measure=effect_measure).count()
+                measures[effect_measure] = (count / total_year) * 100
+            
+            effect_measure_timeline.append({
+                'year': year,
+                **measures
+            })
+    
+    # Outcome type distribution
+    outcome_type_distribution = PICOComparison.objects.values('outcome_type').annotate(
+        count=Count('id')
+    ).order_by('-count')
+    
     # Transparency metrics
-    studies_with_protocol = TTEStudy.objects.filter(protocol__isnull=False).count()
-    studies_with_data = TTEStudy.objects.filter(data_url__isnull=False).count()
-    studies_with_code = TTEStudy.objects.filter(code_url__isnull=False).count()
+    studies_with_protocol = TTEStudy.objects.filter(protocol__isnull=False).exclude(protocol__exact='').count()
+    studies_with_data = TTEStudy.objects.filter(data_url__isnull=False).exclude(data_url__exact='').count()
+    studies_with_code = TTEStudy.objects.filter(code_url__isnull=False).exclude(code_url__exact='').count()
+    
+    # Transparency by methodology quality
+    transparency_by_methodology = {
+        'dag_users': {
+            'total': TTEStudy.objects.filter(dag=True).count(),
+            'with_protocol': TTEStudy.objects.filter(dag=True, protocol__isnull=False).exclude(protocol__exact='').count(),
+            'with_data': TTEStudy.objects.filter(dag=True, data_url__isnull=False).exclude(data_url__exact='').count(),
+            'with_code': TTEStudy.objects.filter(dag=True, code_url__isnull=False).exclude(code_url__exact='').count(),
+        },
+        'qba_users': {
+            'total': TTEStudy.objects.filter(qba=True).count(),
+            'with_protocol': TTEStudy.objects.filter(qba=True, protocol__isnull=False).exclude(protocol__exact='').count(),
+            'with_data': TTEStudy.objects.filter(qba=True, data_url__isnull=False).exclude(data_url__exact='').count(),
+            'with_code': TTEStudy.objects.filter(qba=True, code_url__isnull=False).exclude(code_url__exact='').count(),
+        },
+        'both_users': {
+            'total': TTEStudy.objects.filter(dag=True, qba=True).count(),
+            'with_protocol': TTEStudy.objects.filter(dag=True, qba=True, protocol__isnull=False).exclude(protocol__exact='').count(),
+            'with_data': TTEStudy.objects.filter(dag=True, qba=True, data_url__isnull=False).exclude(data_url__exact='').count(),
+            'with_code': TTEStudy.objects.filter(dag=True, qba=True, code_url__isnull=False).exclude(code_url__exact='').count(),
+        }
+    }
+    
+    # Calculate percentages for transparency by methodology
+    for category in transparency_by_methodology:
+        data = transparency_by_methodology[category]
+        total = data['total']
+        if total > 0:
+            data['protocol_percentage'] = (data['with_protocol'] / total) * 100
+            data['data_percentage'] = (data['with_data'] / total) * 100
+            data['code_percentage'] = (data['with_code'] / total) * 100
+        else:
+            data['protocol_percentage'] = 0
+            data['data_percentage'] = 0
+            data['code_percentage'] = 0
     
     # Methodology usage
     studies_with_dag = TTEStudy.objects.filter(dag=True).count()
     studies_with_qba = TTEStudy.objects.filter(qba=True).count()
+    studies_with_both = TTEStudy.objects.filter(dag=True, qba=True).count()
     
     # Concordance metrics for TTE vs RCT
     pico_overlapping = PICOComparison.objects.filter(
         rct_estimate__isnull=False, tte_estimate__isnull=False
     ).count()
+    
+    # Calculate overall concordance rates
+    all_valid_comparisons = PICOComparison.objects.filter(
+        rct_estimate__isnull=False, tte_estimate__isnull=False
+    )
+    total_valid = all_valid_comparisons.count()
+    overall_ci_overlap = 0
+    overall_direction_concordance = 0
+    
+    if total_valid > 0:
+        ci_overlaps = sum(1 for comp in all_valid_comparisons if comp.estimates_overlap)
+        direction_concordances = sum(1 for comp in all_valid_comparisons if comp.concordance_direction)
+        overall_ci_overlap = (ci_overlaps / total_valid) * 100 if ci_overlaps is not None else 0
+        overall_direction_concordance = (direction_concordances / total_valid) * 100 if direction_concordances is not None else 0
     
     context = {
         'overview_stats': overview_stats,
@@ -227,18 +438,64 @@ def statistics(request):
         'tte_general_stats': tte_general_stats,
         'total_studies': total_studies,
         'total_comparisons': total_comparisons,
+        
+        # TTE Studies Only Data
         'disease_distribution': disease_distribution,
+        'publication_timeline': publication_timeline,
+        'data_type_distribution': data_type_distribution,
+        'geographic_distribution': geographic_distribution,
+        'institution_type_distribution': institution_type_distribution,
+        'methodology_timeline': methodology_timeline,
+        'sample_size_stats': sample_size_stats,
+        'sample_size_distribution': sample_size_distribution,
+        'analysis_methods': analysis_methods,
+        'matching_methods': matching_methods,
+        
+        # TTE vs RCT Comparison Data
+        'effect_measure_concordance': effect_measure_concordance,
+        'disease_concordance': disease_concordance,
+        'effect_measure_timeline': effect_measure_timeline,
+        'outcome_type_distribution': outcome_type_distribution,
+        'studies_with_comparisons_count': studies_with_comparisons.count(),
+        
+        # Transparency metrics
         'transparency_metrics': {
             'protocol_percentage': (studies_with_protocol / total_studies * 100) if total_studies > 0 else 0,
             'data_percentage': (studies_with_data / total_studies * 100) if total_studies > 0 else 0,
             'code_percentage': (studies_with_code / total_studies * 100) if total_studies > 0 else 0,
         },
+        'transparency_by_methodology': transparency_by_methodology,
+        
+        # Methodology metrics
         'methodology_metrics': {
             'dag_percentage': (studies_with_dag / total_studies * 100) if total_studies > 0 else 0,
             'qba_percentage': (studies_with_qba / total_studies * 100) if total_studies > 0 else 0,
+            'both_percentage': (studies_with_both / total_studies * 100) if total_studies > 0 else 0,
         },
+        
+        # Concordance metrics
         'concordance_metrics': {
             'total_comparisons': pico_overlapping,
+            'overall_ci_overlap': overall_ci_overlap,
+            'overall_direction_concordance': overall_direction_concordance,
+            'high_concordance_rate': (overall_ci_overlap + overall_direction_concordance) / 2 if overall_ci_overlap and overall_direction_concordance else 0,
+        },
+        
+        # JSON data for charts
+        'chart_data': {
+            'disease_distribution': json.dumps(list(disease_distribution)),
+            'publication_timeline': json.dumps(list(publication_timeline)),
+            'data_type_distribution': json.dumps(list(data_type_distribution)),
+            'geographic_distribution': json.dumps(list(geographic_distribution)),
+            'institution_type_distribution': json.dumps(list(institution_type_distribution)),
+            'methodology_timeline': json.dumps(methodology_timeline),
+            'sample_size_distribution': json.dumps(sample_size_distribution),
+            'analysis_methods': json.dumps(list(analysis_methods)),
+            'matching_methods': json.dumps(list(matching_methods)),
+            'effect_measure_concordance': json.dumps(effect_measure_concordance),
+            'disease_concordance': json.dumps(disease_concordance),
+            'effect_measure_timeline': json.dumps(effect_measure_timeline),
+            'outcome_type_distribution': json.dumps(list(outcome_type_distribution)),
         }
     }
     return render(request, 'ttedb/statistics.html', context)

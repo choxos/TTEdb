@@ -163,4 +163,44 @@ Thumbs.db
 node_modules/
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log* 
+yarn-error.log*
+
+# ====================================
+# TTEdb Sensitive Files & Data
+# ====================================
+
+# Deployment and server configuration files
+DEPLOYMENT_GUIDE.md
+TTEdb_guide.md
+
+# Research protocols and documentation
+Protocol_TTE_MetaResearch.md
+
+# Dataset and research data files
+dataset/
+data/
+
+# Backup files
+*.bak
+*.backup
+
+# Configuration files that might contain sensitive info
+config/local.py
+config/production.py
+config/staging.py
+
+# SSL certificates and keys
+*.pem
+*.key
+*.crt
+*.csr
+
+# Database dumps
+*.sql
+*.dump
+
+# Any files containing credentials or secrets
+*secret*
+*password*
+*credential*
+.secrets 
