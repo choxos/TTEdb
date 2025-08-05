@@ -78,8 +78,8 @@
                 <a href="{% url 'ttedb:learning_hub' %}" class="xera-nav-link {% if 'learning_hub' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-graduation-cap me-1"></i>Learning Hub
                 </a>
-                <a href="{% url 'ttedb:statistics' %}" class="xera-nav-link {% if 'statistics' in request.resolver_match.url_name %}active{% endif %}">
-                    <i class="fas fa-chart-bar me-1"></i>Statistics
+                                        <a href="{% url 'ttedb:analysis' %}" class="xera-nav-link {% if 'analysis' in request.resolver_match.url_name %}active{% endif %}">
+                            <i class="fas fa-microscope me-1"></i>Analysis
                 </a>
                 <a href="{% url 'ttedb:about' %}" class="xera-nav-link {% if 'about' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-info-circle me-1"></i>About
@@ -243,9 +243,21 @@
     
     {% block extra_js %}{% endblock %}
     
-    <!-- Analytics (if needed) -->
-    {% if not debug %}
-    <!-- Add your analytics code here -->
+    <!-- Google Analytics -->
+    {% load static %}
+    {% if not debug and settings.ENABLE_ANALYTICS %}
+    <!-- Google Analytics Global Site Tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ settings.GOOGLE_ANALYTICS_ID }}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '{{ settings.GOOGLE_ANALYTICS_ID }}', {
+            'anonymize_ip': true,
+            'cookie_flags': 'SameSite=None;Secure',
+            'transport_type': 'beacon'
+        });
+    </script>
     {% endif %}
     
     <!-- Service Worker for PWA (optional) -->

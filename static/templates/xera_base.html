@@ -240,9 +240,21 @@
     
     {% block extra_js %}{% endblock %}
     
-    <!-- Analytics (if needed) -->
-    {% if not debug %}
-    <!-- Add your analytics code here -->
+    <!-- Google Analytics -->
+    {% load static %}
+    {% if not debug and settings.ENABLE_ANALYTICS %}
+    <!-- Google Analytics Global Site Tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ settings.GOOGLE_ANALYTICS_ID }}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '{{ settings.GOOGLE_ANALYTICS_ID }}', {
+            'anonymize_ip': true,
+            'cookie_flags': 'SameSite=None;Secure',
+            'transport_type': 'beacon'
+        });
+    </script>
     {% endif %}
     
     <!-- Service Worker for PWA (optional) -->

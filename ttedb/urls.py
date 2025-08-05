@@ -9,7 +9,7 @@ urlpatterns = [
     path('tte/', views.tte_list, name='tte_list'),
     path('tte-vs-rct/', views.tte_vs_rct, name='tte_vs_rct'),
     path('learning-hub/', views.learning_hub, name='learning_hub'),
-    path('statistics/', views.statistics, name='statistics'),
+    path('analysis/', views.analysis, name='analysis'),
     path('about/', views.about, name='about'),
     
     # Detail pages

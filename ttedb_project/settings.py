@@ -62,6 +62,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'ttedb_project.context_processors.settings',
             ],
         },
     },
@@ -205,3 +206,7 @@ LOGGING = {
 TTEDB_VERSION = '1.0.0'
 TTEDB_THEME = 'ttedb-theme'
 XERA_DB_SHARED_THEME_PATH = BASE_DIR / 'shared_theme'
+
+# Google Analytics configuration
+GOOGLE_ANALYTICS_ID = config('GOOGLE_ANALYTICS_ID', default='')
+ENABLE_ANALYTICS = not DEBUG and bool(GOOGLE_ANALYTICS_ID)

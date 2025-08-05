@@ -191,8 +191,8 @@ def learning_resource_detail(request, resource_id):
     return render(request, 'ttedb/learning_resource_detail.html', context)
 
 
-def statistics(request):
-    """Statistics page with database analytics"""
+def analysis(request):
+    """Analysis page with comprehensive database analytics and meta-analysis"""
     from django.db.models import Count, Q, Avg, Max, Min
     import json
     
@@ -498,7 +498,7 @@ def statistics(request):
             'outcome_type_distribution': json.dumps(list(outcome_type_distribution)),
         }
     }
-    return render(request, 'ttedb/statistics.html', context)
+    return render(request, 'ttedb/analysis.html', context)
 
 
 def about(request):
