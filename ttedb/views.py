@@ -199,6 +199,8 @@ def analysis(request):
     import plotly.offline as ply
     import numpy as np
     import math
+    import os
+    from django.conf import settings
     
     # Get pre-calculated statistics
     overview_stats = DatabaseStatistic.objects.filter(statistic_type='overview')
@@ -436,8 +438,37 @@ def analysis(request):
         overall_ci_overlap = (ci_overlaps / total_valid) * 100 if ci_overlaps is not None else 0
         overall_direction_concordance = (direction_concordances / total_valid) * 100 if direction_concordances is not None else 0
     
+    # ===== LOAD REAL R ANALYSIS RESULTS =====
+    def load_real_analysis_data():
+        """Load real analysis results from R exports"""
+        try:
+            base_dir = os.path.join(settings.BASE_DIR, 'ttedb', 'data')
+            
+            # Load descriptive results
+            descriptive_path = os.path.join(base_dir, 'descriptive_results.json')
+            with open(descriptive_path, 'r') as f:
+                descriptive_data = json.load(f)
+            
+            # Load forest plot data
+            forest_path = os.path.join(base_dir, 'forest_plot_data.json')
+            with open(forest_path, 'r') as f:
+                forest_data = json.load(f)
+            
+            # Load meta-analysis results (optional)
+            meta_path = os.path.join(base_dir, 'meta_analysis_results.json')
+            meta_data = {}
+            if os.path.exists(meta_path):
+                with open(meta_path, 'r') as f:
+                    meta_data = json.load(f)
+            
+            return descriptive_data, forest_data, meta_data
+            
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            print(f"Warning: Could not load real data ({e}), using fallback data")
+            return None, None, None
+    
     # ===== FOREST PLOT GENERATION =====
-    def generate_forest_plot(effect_measure, studies_data, title):
+    def generate_forest_plot(effect_measure, studies_data, title, meta_results=None):
         """Generate interactive forest plot using Plotly"""
         if not studies_data:
             return "<div class='alert alert-info'>No data available for this measure type</div>"
@@ -497,57 +528,73 @@ def analysis(request):
                 name=label
             ))
         
-        # Calculate proper meta-analysis metrics
-        n_studies = len(point_estimates)
-        weights = [1.0 / (se**2) for se in standard_errors]  # Inverse variance weights
-        total_weight = sum(weights)
-        
-        # Fixed-effects pooled estimate
-        pooled_pe_fixed = sum(pe * w for pe, w in zip(point_estimates, weights)) / total_weight
-        pooled_se_fixed = math.sqrt(1.0 / total_weight)
-        
-        # Calculate Q statistic for heterogeneity
-        q_stat = sum(w * (pe - pooled_pe_fixed)**2 for pe, w in zip(point_estimates, weights))
-        df = n_studies - 1
-        
-        # Calculate I² statistic  
-        i_squared = max(0, ((q_stat - df) / q_stat) * 100) if q_stat > 0 else 0
-        
-        # Calculate tau² (DerSimonian-Laird estimator)
-        if q_stat <= df:
-            tau_squared = 0
+        # Use real meta-analysis results if available, otherwise calculate
+        if meta_results and effect_measure.upper() in meta_results:
+            real_meta = meta_results[effect_measure.upper()]
+            pooled_pe = real_meta['pooled_estimate']
+            pooled_lower = real_meta['ci_lower'] 
+            pooled_upper = real_meta['ci_upper']
+            pred_lower = real_meta.get('prediction_lower', pooled_lower)
+            pred_upper = real_meta.get('prediction_upper', pooled_upper)
+            i_squared = real_meta.get('i_squared', 0)
+            tau_squared = real_meta.get('tau_squared', 0)
+            q_stat = real_meta.get('q_statistic', 0)
+            q_pvalue = real_meta.get('q_pvalue', 1.0)
+            total_n = real_meta.get('total_sample_size', 0)
+            n_studies = real_meta.get('n_studies', len(point_estimates))
+            df = n_studies - 1
         else:
-            c = total_weight - sum(w**2 for w in weights) / total_weight
-            tau_squared = (q_stat - df) / c if c > 0 else 0
-        
-        # Random-effects pooled estimate
-        if tau_squared > 0:
-            re_weights = [1.0 / (se**2 + tau_squared) for se in standard_errors]
-            total_re_weight = sum(re_weights)
-            pooled_pe = sum(pe * w for pe, w in zip(point_estimates, re_weights)) / total_re_weight
-            pooled_se = math.sqrt(1.0 / total_re_weight)
-        else:
-            pooled_pe = pooled_pe_fixed
-            pooled_se = pooled_se_fixed
-        
-        # 95% Confidence interval
-        pooled_lower = pooled_pe - 1.96 * pooled_se
-        pooled_upper = pooled_pe + 1.96 * pooled_se
-        
-        # 95% Prediction interval (for future studies)
-        pred_se = math.sqrt(pooled_se**2 + tau_squared)
-        pred_lower = pooled_pe - 1.96 * pred_se
-        pred_upper = pooled_pe + 1.96 * pred_se
-        
-        # Calculate total sample size
-        total_n = sum(study.get('sample_size', 0) for study in studies_data)
-        
-        # P-value for Q test (chi-square distribution)
-        from scipy import stats
-        try:
-            q_pvalue = 1 - stats.chi2.cdf(q_stat, df) if df > 0 else 1.0
-        except:
-            q_pvalue = 1.0  # Fallback if scipy not available
+            # Calculate proper meta-analysis metrics (fallback)
+            n_studies = len(point_estimates)
+            weights = [1.0 / (se**2) for se in standard_errors]  # Inverse variance weights
+            total_weight = sum(weights)
+            
+            # Fixed-effects pooled estimate
+            pooled_pe_fixed = sum(pe * w for pe, w in zip(point_estimates, weights)) / total_weight
+            pooled_se_fixed = math.sqrt(1.0 / total_weight)
+            
+            # Calculate Q statistic for heterogeneity
+            q_stat = sum(w * (pe - pooled_pe_fixed)**2 for pe, w in zip(point_estimates, weights))
+            df = n_studies - 1
+            
+            # Calculate I² statistic  
+            i_squared = max(0, ((q_stat - df) / q_stat) * 100) if q_stat > 0 else 0
+            
+            # Calculate tau² (DerSimonian-Laird estimator)
+            if q_stat <= df:
+                tau_squared = 0
+            else:
+                c = total_weight - sum(w**2 for w in weights) / total_weight
+                tau_squared = (q_stat - df) / c if c > 0 else 0
+            
+            # Random-effects pooled estimate
+            if tau_squared > 0:
+                re_weights = [1.0 / (se**2 + tau_squared) for se in standard_errors]
+                total_re_weight = sum(re_weights)
+                pooled_pe = sum(pe * w for pe, w in zip(point_estimates, re_weights)) / total_re_weight
+                pooled_se = math.sqrt(1.0 / total_re_weight)
+            else:
+                pooled_pe = pooled_pe_fixed
+                pooled_se = pooled_se_fixed
+            
+            # 95% Confidence interval
+            pooled_lower = pooled_pe - 1.96 * pooled_se
+            pooled_upper = pooled_pe + 1.96 * pooled_se
+            
+            # 95% Prediction interval (for future studies)
+            pred_se = math.sqrt(pooled_se**2 + tau_squared)
+            pred_lower = pooled_pe - 1.96 * pred_se
+            pred_upper = pooled_pe + 1.96 * pred_se
+            
+            # Calculate total sample size
+            total_n = sum(study.get('sample_size', 0) for study in studies_data)
+            
+            # P-value for Q test (chi-square distribution)
+            from scipy import stats
+            try:
+                q_pvalue = 1 - stats.chi2.cdf(q_stat, df) if df > 0 else 1.0
+            except:
+                q_pvalue = 1.0  # Fallback if scipy not available
         
         # Add pooled estimate
         pooled_y = len(studies_data) + 0.5
@@ -629,9 +676,35 @@ def analysis(request):
         # Convert to HTML
         return ply.plot(fig, output_type='div', include_plotlyjs=False)
     
-    # Generate sample forest plot data (in real implementation, this would come from your database)
+    def get_forest_plot_data(effect_measure, real_forest_data=None):
+        """Get forest plot data - real data if available, otherwise fallback"""
+        if real_forest_data and effect_measure.lower() in real_forest_data:
+            # Use real R analysis data
+            real_data = real_forest_data[effect_measure.lower()]
+            studies = []
+            
+            for i, row in enumerate(real_data):
+                studies.append({
+                    'author': row.get('author', f'Study {i+1}'),
+                    'year': row.get('year', 2020),
+                    'point_estimate': row['point_estimate'],
+                    'lower_ci': row['lower_ci'],
+                    'upper_ci': row['upper_ci'],
+                    'population': f"N = {row.get('sample_size', 1000):,}",
+                    'sample_size': row.get('sample_size', 1000),
+                    'tte_estimate': row.get('tte_estimate'),
+                    'rct_estimate': row.get('rct_estimate'),
+                    'study_id': row.get('study_id', f'study_{i+1}'),
+                    'target_trial': row.get('target_trial_name', 'Target Trial')
+                })
+            
+            return studies
+        else:
+            # Fallback to generated data if real data not available
+            return get_sample_forest_data(effect_measure)
+    
     def get_sample_forest_data(effect_measure):
-        """Generate realistic sample data for forest plots"""
+        """Generate realistic sample data for forest plots (fallback)"""
         import random
         random.seed(42)  # Reproducible data
         
@@ -698,6 +771,9 @@ def analysis(request):
         studies.sort(key=lambda x: (x['year'], x['author']))
         return studies
     
+    # Load real analysis data
+    descriptive_data, real_forest_data, meta_data = load_real_analysis_data()
+    
     # Generate forest plots for each effect measure
     forest_plots = {}
     effect_measures = ['HR', 'OR', 'RR', 'RD', 'MD', 'SMD']
@@ -711,9 +787,10 @@ def analysis(request):
     }
     
     for measure in effect_measures:
-        data = get_sample_forest_data(measure)
+        # Use real data if available, otherwise fallback to generated data
+        data = get_forest_plot_data(measure, real_forest_data)
         title = f"{effect_measure_names[measure]} (n={len(data)})"
-        forest_plots[measure.lower()] = generate_forest_plot(measure, data, title)
+        forest_plots[measure.lower()] = generate_forest_plot(measure, data, title, meta_data)
 
     context = {
         'overview_stats': overview_stats,
@@ -784,6 +861,23 @@ def analysis(request):
             'outcome_type_distribution': json.dumps(list(outcome_type_distribution)),
         }
     }
+    
+    # Add real analysis data from R if available
+    if descriptive_data:
+        context.update({
+            'use_real_stats': True,
+            'real_total_studies': descriptive_data['overview']['total_studies'],
+            'real_total_comparisons': descriptive_data['overview']['total_comparisons'],
+            'real_year_range': descriptive_data['overview']['year_range'],
+            'real_effect_measures': descriptive_data['effect_measures'],
+            'real_disease_categories': descriptive_data['disease_categories'],
+            'real_methodological_quality': descriptive_data['methodological_quality'],
+            'real_transparency': descriptive_data['transparency'],
+            'real_temporal_trends': descriptive_data['temporal_trends']
+        })
+    else:
+        context['use_real_stats'] = False
+    
     return render(request, 'ttedb/analysis.html', context)
 
 
