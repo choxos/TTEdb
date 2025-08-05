@@ -2279,10 +2279,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 tooltip.textContent = tooltipText;
                 tooltip.classList.add('show');
                 
-                // Position tooltip
-                const rect = this.getBoundingClientRect();
-                tooltip.style.left = rect.left + rect.width / 2 - tooltip.offsetWidth / 2 + 'px';
-                tooltip.style.top = rect.top - tooltip.offsetHeight - 10 + 'px';
+                // Position tooltip at cursor location
+                tooltip.style.left = e.clientX - tooltip.offsetWidth / 2 + 'px';
+                tooltip.style.top = e.clientY - tooltip.offsetHeight - 10 + 'px';
+            });
+            
+            element.addEventListener('mousemove', function(e) {
+                // Update tooltip position as mouse moves
+                if (tooltip.classList.contains('show')) {
+                    tooltip.style.left = e.clientX - tooltip.offsetWidth / 2 + 'px';
+                    tooltip.style.top = e.clientY - tooltip.offsetHeight - 10 + 'px';
+                }
             });
             
             element.addEventListener('mouseleave', function() {
@@ -2305,17 +2312,13 @@ document.addEventListener('DOMContentLoaded', function() {
             );
             
             if (studies.length > 12) {
-                // Initially hide studies beyond the first 12
-                studies.slice(12).forEach(study => {
-                    study.style.display = 'none';
-                });
-                
-                // Add show/hide button
+                // Show all studies by default (no hiding)
+                // Add show/hide button for collapsing if needed
                 const buttonContainer = document.createElement('div');
                 buttonContainer.className = 'show-all-studies';
                 buttonContainer.innerHTML = `
                     <button class="btn-show-studies" onclick="toggleAllStudies(this)">
-                        Show All ${studies.length} Studies
+                        Show Less Studies (${studies.length} total)
                     </button>
                 `;
                 
@@ -2345,11 +2348,11 @@ function toggleAllStudies(button) {
         });
         button.textContent = `Show All ${studies.length} Studies`;
     } else {
-        // Expand - show all studies
+        // Expand - show all studies  
         hiddenStudies.forEach(study => {
             study.style.display = 'flex';
         });
-        button.textContent = 'Show Less Studies';
+        button.textContent = `Show Less Studies (${studies.length} total)`;
     }
 }
 </script>
