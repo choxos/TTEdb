@@ -42,28 +42,67 @@ cat("PICO data loaded for meta-analysis: ", nrow(picos), " comparisons\n")
 # ============================================================================
 
 cat("Performing real meta-analysis with your TTE data...\n")
+cat("Calculating TTE-RCT differences from raw estimates:\n")
+cat("- Ratio measures (HR, OR, RR): log(TTE) - log(RCT)\n")
+cat("- Difference measures (RD, MD, SMD): TTE - RCT\n")
 
-# Clean the PICO data for meta-analysis
+# Clean the PICO data and calculate TTE-RCT differences
 picos_meta <- picos %>%
   filter(
     !is.na(effect_measure),
-    !is.na(tte_rct_diff_estimate),
-    !is.na(tte_rct_diff_lb),
-    !is.na(tte_rct_diff_ub),
-    is.finite(tte_rct_diff_estimate),
-    is.finite(tte_rct_diff_lb), 
-    is.finite(tte_rct_diff_ub),
-    tte_rct_diff_lb < tte_rct_diff_ub  # Valid confidence intervals
+    !is.na(tte_estimate),
+    !is.na(rct_estimate),
+    !is.na(tte_lb),
+    !is.na(tte_ub),
+    !is.na(rct_lb),
+    !is.na(rct_ub),
+    is.finite(tte_estimate),
+    is.finite(rct_estimate),
+    is.finite(tte_lb),
+    is.finite(tte_ub),
+    is.finite(rct_lb),
+    is.finite(rct_ub),
+    # Valid confidence intervals
+    tte_lb < tte_ub,
+    rct_lb < rct_ub,
+    # For ratio measures, estimates must be positive
+    !(effect_measure %in% c("HR", "OR", "RR") & 
+      (tte_estimate <= 0 | rct_estimate <= 0 | tte_lb <= 0 | tte_ub <= 0 | rct_lb <= 0 | rct_ub <= 0))
   ) %>%
   mutate(
-    # Calculate standard error from confidence intervals
-    diff_se = (tte_rct_diff_ub - tte_rct_diff_lb) / (2 * qnorm(0.975)),
+    # Calculate standard errors from confidence intervals
+    tte_se = case_when(
+      effect_measure %in% c("HR", "OR", "RR") ~ (log(tte_ub) - log(tte_lb)) / (2 * qnorm(0.975)),
+      TRUE ~ (tte_ub - tte_lb) / (2 * qnorm(0.975))
+    ),
+    rct_se = case_when(
+      effect_measure %in% c("HR", "OR", "RR") ~ (log(rct_ub) - log(rct_lb)) / (2 * qnorm(0.975)),
+      TRUE ~ (rct_ub - rct_lb) / (2 * qnorm(0.975))
+    ),
+    
+    # Calculate TTE-RCT differences on appropriate scales
+    diff_estimate = case_when(
+      effect_measure %in% c("HR", "OR", "RR") ~ log(tte_estimate) - log(rct_estimate),
+      TRUE ~ tte_estimate - rct_estimate
+    ),
+    
+    # Calculate standard error of differences (independent estimates)
+    diff_se = sqrt(tte_se^2 + rct_se^2),
+    
+    # Calculate confidence intervals for differences
+    diff_lb = diff_estimate - 1.96 * diff_se,
+    diff_ub = diff_estimate + 1.96 * diff_se,
+    
     # Calculate total sample sizes
     total_n_tte = coalesce(n_trt_tte + n_ctrl_tte, 1000),
     total_n_rct = coalesce(n_trt_rct + n_ctrl_rct, 1000)
   ) %>%
   filter(
+    is.finite(tte_se),
+    is.finite(rct_se), 
     is.finite(diff_se),
+    tte_se > 0,
+    rct_se > 0,
     diff_se > 0  # Valid standard errors
   )
 
@@ -81,7 +120,7 @@ for (measure in unique(picos_meta$effect_measure)) {
     tryCatch({
       # Perform random-effects meta-analysis using the 'meta' package
       meta_result <- metagen(
-        TE = tte_rct_diff_estimate,
+        TE = diff_estimate,
         seTE = diff_se,
         data = measure_data,
         studlab = paste(first_author, year),
@@ -123,7 +162,7 @@ for (measure in unique(picos_meta$effect_measure)) {
       
       # Fallback to simple weighted mean
       weights <- 1 / measure_data$diff_se^2
-      pooled_est <- sum(measure_data$tte_rct_diff_estimate * weights) / sum(weights)
+      pooled_est <- sum(measure_data$diff_estimate * weights) / sum(weights)
       pooled_se <- sqrt(1 / sum(weights))
       
       meta_results[[measure]] <- list(
@@ -160,9 +199,9 @@ if (length(meta_results) > 0) {
   cat("✅ Real meta-analysis results exported to: ttedb/data/meta_analysis_results.json\n")
   
   # Print summary
-  cat("\n" + "="*70 + "\n")
+  cat("\n", paste(rep("=", 70), collapse=""), "\n")
   cat("REAL META-ANALYSIS RESULTS SUMMARY\n")
-  cat("="*70 + "\n")
+  cat(paste(rep("=", 70), collapse=""), "\n")
   
   for (measure in names(meta_results)) {
     result <- meta_results[[measure]]
@@ -190,9 +229,9 @@ for (measure in unique(picos_meta$effect_measure)) {
     mutate(
       author = coalesce(first_author, paste("Study", row_number())),
       study_label = paste(author, year),
-      point_estimate = tte_rct_diff_estimate,
-      lower_ci = tte_rct_diff_lb,
-      upper_ci = tte_rct_diff_ub,
+      point_estimate = diff_estimate,
+      lower_ci = diff_lb,
+      upper_ci = diff_ub,
       sample_size = total_n_tte,
       tte_estimate = tte_estimate,
       rct_estimate = rct_estimate,
@@ -237,9 +276,9 @@ export_summary <- list(
 write_json(export_summary, "ttedb/data/export_summary.json", 
            pretty = TRUE, auto_unbox = TRUE)
 
-cat("\n" + "="*80 + "\n")
+cat("\n", paste(rep("=", 80), collapse=""), "\n")
 cat("🎯 COMPLETE R-TO-DJANGO EXPORT WITH META-ANALYSIS FINISHED!\n")
-cat("="*80 + "\n")
+cat(paste(rep("=", 80), collapse=""), "\n")
 cat("Files created:\n")
 cat("✅ ttedb/data/descriptive_results.json (real descriptive statistics)\n")
 cat("✅ ttedb/data/forest_plot_data.json (real individual study data)\n") 
@@ -252,4 +291,4 @@ for (measure in names(meta_results)) {
               measure, result$n_studies, result$i_squared, result$q_pvalue))
 }
 cat("\nYour Django website will now show REAL meta-analysis results! 🎯✨\n")
-cat("="*80 + "\n")
+cat(paste(rep("=", 80), collapse=""), "\n")
