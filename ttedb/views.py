@@ -483,14 +483,15 @@ def analysis(request):
         hover_texts = []
         
         for i, study in enumerate(studies_data):
-            study_labels.append(f"{study['author']} {study['year']}")
+            study_labels.append(study.get('study_label', f"{study['author']} {study['year']}"))
             point_estimates.append(study['point_estimate'])
             lower_cis.append(study['lower_ci'])
             upper_cis.append(study['upper_ci'])
             
             # Rich hover text
+            n_comp_text = f" ({study['n_comparisons']} comparisons)" if study.get('n_comparisons', 1) > 1 else ""
             hover_texts.append(
-                f"<b>{study['author']} et al. {study['year']}</b><br>" +
+                f"<b>{study['author']} et al. {study['year']}</b>{n_comp_text}<br>" +
                 f"Point Estimate: {study['point_estimate']:.3f}<br>" +
                 f"95% CI: [{study['lower_ci']:.3f}, {study['upper_ci']:.3f}]<br>" +
                 f"Population: {study.get('population', 'Not specified')}<br>" +
@@ -681,23 +682,60 @@ def analysis(request):
         if real_forest_data and effect_measure.lower() in real_forest_data:
             # Use real R analysis data
             real_data = real_forest_data[effect_measure.lower()]
-            studies = []
             
-            for i, row in enumerate(real_data):
+            # Group by study (author + year) to aggregate multiple comparisons per study
+            from collections import defaultdict
+            import statistics
+            
+            grouped_studies = defaultdict(list)
+            
+            # Group entries by study
+            for row in real_data:
+                study_key = f"{row.get('author', 'Unknown')}_{row.get('year', 2020)}"
+                grouped_studies[study_key].append(row)
+            
+            studies = []
+            for study_key, study_rows in grouped_studies.items():
+                # If multiple comparisons per study, aggregate them
+                if len(study_rows) > 1:
+                    # Calculate mean effect estimate and confidence intervals
+                    point_estimates = [row['point_estimate'] for row in study_rows]
+                    lower_cis = [row['lower_ci'] for row in study_rows]
+                    upper_cis = [row['upper_ci'] for row in study_rows]
+                    
+                    avg_point = statistics.mean(point_estimates)
+                    avg_lower = statistics.mean(lower_cis)
+                    avg_upper = statistics.mean(upper_cis)
+                    
+                    # Use first row for other data
+                    base_row = study_rows[0]
+                    author_year = f"{base_row.get('author', 'Study')} {base_row.get('year', 2020)} (n={len(study_rows)})"
+                else:
+                    # Single comparison per study
+                    base_row = study_rows[0]
+                    avg_point = base_row['point_estimate']
+                    avg_lower = base_row['lower_ci']
+                    avg_upper = base_row['upper_ci']
+                    author_year = f"{base_row.get('author', 'Study')} {base_row.get('year', 2020)}"
+                
                 studies.append({
-                    'author': row.get('author', f'Study {i+1}'),
-                    'year': row.get('year', 2020),
-                    'point_estimate': row['point_estimate'],
-                    'lower_ci': row['lower_ci'],
-                    'upper_ci': row['upper_ci'],
-                    'population': f"N = {row.get('sample_size', 1000):,}",
-                    'sample_size': row.get('sample_size', 1000),
-                    'tte_estimate': row.get('tte_estimate'),
-                    'rct_estimate': row.get('rct_estimate'),
-                    'study_id': row.get('study_id', f'study_{i+1}'),
-                    'target_trial': row.get('target_trial_name', 'Target Trial')
+                    'author': base_row.get('author', 'Study'),
+                    'year': base_row.get('year', 2020),
+                    'study_label': author_year,
+                    'point_estimate': avg_point,
+                    'lower_ci': avg_lower,
+                    'upper_ci': avg_upper,
+                    'population': f"N = {base_row.get('sample_size', 1000):,}",
+                    'sample_size': base_row.get('sample_size', 1000),
+                    'tte_estimate': base_row.get('tte_estimate'),
+                    'rct_estimate': base_row.get('rct_estimate'),
+                    'study_id': base_row.get('study_id', f'study_1'),
+                    'target_trial': base_row.get('target_trial_name', 'Target Trial'),
+                    'n_comparisons': len(study_rows)
                 })
             
+            # Sort by year and author
+            studies.sort(key=lambda x: (x['year'], x['author']))
             return studies
         else:
             # Fallback to generated data if real data not available
@@ -871,12 +909,32 @@ def analysis(request):
             'real_year_range': descriptive_data['overview']['year_range'],
             'real_effect_measures': descriptive_data['effect_measures'],
             'real_disease_categories': descriptive_data['disease_categories'],
-            'real_methodological_quality': descriptive_data['methodological_quality'],
-            'real_transparency': descriptive_data['transparency'],
+            'real_methodological_quality': descriptive_data.get('methodological_quality', []),
+            'real_transparency': descriptive_data.get('transparency', []),
             'real_temporal_trends': descriptive_data['temporal_trends']
         })
     else:
         context['use_real_stats'] = False
+    
+    # Add meta-analysis results if available
+    if meta_data:
+        context.update({
+            'meta_analysis_results': meta_data,
+            'has_meta_results': True
+        })
+        
+        # Load subgroup analysis results
+        try:
+            base_dir = os.path.join(settings.BASE_DIR, 'ttedb', 'data')
+            subgroup_path = os.path.join(base_dir, 'subgroup_analysis_results.json')
+            if os.path.exists(subgroup_path):
+                with open(subgroup_path, 'r') as f:
+                    subgroup_data = json.load(f)
+                context['subgroup_analysis_results'] = subgroup_data
+        except (FileNotFoundError, json.JSONDecodeError):
+            pass
+    else:
+        context['has_meta_results'] = False
     
     return render(request, 'ttedb/analysis.html', context)
 
