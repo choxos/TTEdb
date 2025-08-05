@@ -17,4 +17,5 @@ django-debug-toolbar==4.4.6
 
 # For plotting and charts (optional, for statistics)
 plotly==5.24.1
-matplotlib>=3.9.0 
+matplotlib>=3.9.0
+scipy>=1.11.0 

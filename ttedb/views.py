@@ -497,10 +497,57 @@ def analysis(request):
                 name=label
             ))
         
-        # Calculate pooled estimate (simple mean for demo - in reality would use proper meta-analysis)
-        pooled_pe = np.mean(point_estimates)
-        pooled_lower = pooled_pe - 1.96 * np.std(point_estimates) / np.sqrt(len(point_estimates))
-        pooled_upper = pooled_pe + 1.96 * np.std(point_estimates) / np.sqrt(len(point_estimates))
+        # Calculate proper meta-analysis metrics
+        n_studies = len(point_estimates)
+        weights = [1.0 / (se**2) for se in standard_errors]  # Inverse variance weights
+        total_weight = sum(weights)
+        
+        # Fixed-effects pooled estimate
+        pooled_pe_fixed = sum(pe * w for pe, w in zip(point_estimates, weights)) / total_weight
+        pooled_se_fixed = math.sqrt(1.0 / total_weight)
+        
+        # Calculate Q statistic for heterogeneity
+        q_stat = sum(w * (pe - pooled_pe_fixed)**2 for pe, w in zip(point_estimates, weights))
+        df = n_studies - 1
+        
+        # Calculate I² statistic  
+        i_squared = max(0, ((q_stat - df) / q_stat) * 100) if q_stat > 0 else 0
+        
+        # Calculate tau² (DerSimonian-Laird estimator)
+        if q_stat <= df:
+            tau_squared = 0
+        else:
+            c = total_weight - sum(w**2 for w in weights) / total_weight
+            tau_squared = (q_stat - df) / c if c > 0 else 0
+        
+        # Random-effects pooled estimate
+        if tau_squared > 0:
+            re_weights = [1.0 / (se**2 + tau_squared) for se in standard_errors]
+            total_re_weight = sum(re_weights)
+            pooled_pe = sum(pe * w for pe, w in zip(point_estimates, re_weights)) / total_re_weight
+            pooled_se = math.sqrt(1.0 / total_re_weight)
+        else:
+            pooled_pe = pooled_pe_fixed
+            pooled_se = pooled_se_fixed
+        
+        # 95% Confidence interval
+        pooled_lower = pooled_pe - 1.96 * pooled_se
+        pooled_upper = pooled_pe + 1.96 * pooled_se
+        
+        # 95% Prediction interval (for future studies)
+        pred_se = math.sqrt(pooled_se**2 + tau_squared)
+        pred_lower = pooled_pe - 1.96 * pred_se
+        pred_upper = pooled_pe + 1.96 * pred_se
+        
+        # Calculate total sample size
+        total_n = sum(study.get('sample_size', 0) for study in studies_data)
+        
+        # P-value for Q test (chi-square distribution)
+        from scipy import stats
+        try:
+            q_pvalue = 1 - stats.chi2.cdf(q_stat, df) if df > 0 else 1.0
+        except:
+            q_pvalue = 1.0  # Fallback if scipy not available
         
         # Add pooled estimate
         pooled_y = len(studies_data) + 0.5
@@ -515,6 +562,19 @@ def analysis(request):
             hoverinfo='skip'
         ))
         
+        # Create comprehensive tooltip for pooled estimate
+        pooled_tooltip = f"""<b>Random-Effects Meta-Analysis</b><br>
+<b>Pooled Estimate:</b> {pooled_pe:.3f}<br>
+<b>95% CI:</b> [{pooled_lower:.3f}, {pooled_upper:.3f}]<br>
+<b>95% Prediction Interval:</b> [{pred_lower:.3f}, {pred_upper:.3f}]<br>
+<br><b>Heterogeneity Metrics:</b><br>
+<b>I² =</b> {i_squared:.1f}%<br>
+<b>τ² =</b> {tau_squared:.4f}<br>
+<b>Q =</b> {q_stat:.2f}, df = {df}, p = {q_pvalue:.3f}<br>
+<br><b>Study Information:</b><br>
+<b>Studies:</b> {n_studies}<br>
+<b>Total Sample Size:</b> {total_n:,}"""
+        
         # Pooled point estimate (diamond)
         fig.add_trace(go.Scatter(
             x=[pooled_pe],
@@ -526,7 +586,7 @@ def analysis(request):
                 symbol='diamond',
                 line=dict(color='white', width=2)
             ),
-            text=f"<b>Pooled Estimate</b><br>Point Estimate: {pooled_pe:.3f}<br>95% CI: [{pooled_lower:.3f}, {pooled_upper:.3f}]",
+            text=pooled_tooltip,
             hoverinfo='text',
             showlegend=False,
             name='Pooled'
