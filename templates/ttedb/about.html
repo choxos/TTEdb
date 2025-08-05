@@ -67,6 +67,10 @@
         <h2 class="mb-4">
             <i class="fas fa-users text-primary me-2"></i>Research Team
         </h2>
+        <div class="alert alert-info mb-4">
+            <h5 class="mb-3">{{ protocol_title }}</h5>
+            <p class="mb-0">This database is part of a comprehensive meta-epidemiological study examining the concordance between target trial emulations and their corresponding randomized controlled trials.</p>
+        </div>
         <div class="row">
             {% for member in team_members %}
                 <div class="col-md-6 mb-4">
@@ -83,11 +87,7 @@
                                         <i class="fab fa-orcid me-1"></i>ORCID
                                     </a>
                                 {% endif %}
-                                {% if member.email %}
-                                    <a href="mailto:{{ member.email }}" class="btn btn-outline-primary btn-sm">
-                                        <i class="fas fa-envelope me-1"></i>Email
-                                    </a>
-                                {% endif %}
+
                             </div>
                         </div>
                     </div>
@@ -266,7 +266,7 @@
                         <p class="card-text">
                             <strong>Primary Contact:</strong><br>
                             Ahmad Sofi-Mahmudi<br>
-                            <a href="mailto:a.sofimahmudi@gmail.com">a.sofimahmudi@gmail.com</a>
+                            Principal Investigator
                         </p>
                         <p class="card-text">
                             <strong>Institution:</strong><br>
@@ -274,8 +274,8 @@
                             Department of Health Research Methods, Evidence, and Impact
                         </p>
                         <div class="d-grid gap-2">
-                            <a href="mailto:a.sofimahmudi@gmail.com?subject=TTEdb Inquiry" class="btn btn-primary btn-sm">
-                                <i class="fas fa-envelope me-1"></i>Send Email
+                            <a href="https://orcid.org/0000-0001-6829-0823" target="_blank" class="btn btn-primary btn-sm">
+                                <i class="fab fa-orcid me-1"></i>View ORCID
                             </a>
                             <a href="https://twitter.com/xeradb" target="_blank" class="btn btn-outline-primary btn-sm">
                                 <i class="fab fa-twitter me-1"></i>Follow Updates
@@ -309,7 +309,7 @@
                 <h6>BibTeX:</h6>
                 <pre class="bg-light p-3 small"><code id="bibtex">@misc{sofimahmudi2024ttedb,
   title={TTEdb: Target Trial Emulation Database},
-  author={Sofi-Mahmudi, Ahmad and Thorlund, Kristian and Dron, Louis and Arora, Priya},
+  author={Sofi-Mahmudi, Ahmad and Thorlund, Kristian and Dron, Louis and Arora, Paul},
   year={2024},
   url={https://ttedb.xeradb.com},
   note={A comprehensive database of target trial emulation studies}

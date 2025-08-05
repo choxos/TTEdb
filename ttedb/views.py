@@ -925,34 +925,33 @@ def analysis(request):
 def about(request):
     """About page with team and project information"""
     context = {
+        'page_title': 'About TTEdb',
+        'page_description': 'Learn about the Target Trial Emulation Database (TTEdb) - a comprehensive resource for TTE studies and their concordance with RCTs.',
+        'protocol_title': 'Comparative Efficacy Estimates Concordance Between Target Trial Emulations and Their Corresponding Target Trials: Protocol for a Living Meta-Epidemiological Study',
         'team_members': [
             {
                 'name': 'Ahmad Sofi-Mahmudi',
                 'role': 'Principal Investigator',
-                'affiliation': 'McMaster University',
+                'affiliation': 'Department of Health Research Methods, Evidence and Impact, McMaster University, Hamilton, Ontario, L8S 4L8, Canada',
                 'orcid': '0000-0001-6829-0823',
-                'email': 'a.sofimahmudi@gmail.com',
             },
             {
                 'name': 'Kristian Thorlund',
                 'role': 'Co-Investigator',
-                'affiliation': 'McMaster University',
-                'orcid': '0000-0002-4645-6924',
-                'email': 'thorlunk@mcmaster.ca',
+                'affiliation': 'Department of Health Research Methods, Evidence and Impact, McMaster University, Hamilton, Ontario, L8S 4L8, Canada',
+                'orcid': '0000-0001-5848-3111',
             },
             {
                 'name': 'Louis Dron',
-                'role': 'Co-Investigator', 
-                'affiliation': 'McMaster University',
-                'orcid': '0000-0002-8469-1830',
-                'email': 'dronl@mcmaster.ca',
+                'role': 'Co-Investigator',
+                'affiliation': 'Cascade Outcomes Research, Vancouver, British Columbia, Canada',
+                'orcid': '0000-0002-3276-3948',
             },
             {
-                'name': 'Priya Arora',
+                'name': 'Paul Arora',
                 'role': 'Co-Investigator',
-                'affiliation': 'McMaster University',
-                'orcid': '0000-0002-0842-5787',
-                'email': 'arorap6@mcmaster.ca',
+                'affiliation': 'Division of Epidemiology, Dalla Lana School of Public Health, University of Toronto, Toronto, Ontario, M5T 3M7, Canada; Inka Health, Schwartz Reisman Innovation Campus, University of Toronto, Toronto, Ontario, M5G 0C6, Canada',
+                'orcid': '0000-0001-6617-3631',
             },
         ],
     }
