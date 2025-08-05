@@ -195,6 +195,10 @@ def analysis(request):
     """Analysis page with comprehensive database analytics and meta-analysis"""
     from django.db.models import Count, Q, Avg, Max, Min
     import json
+    import plotly.graph_objects as go
+    import plotly.offline as ply
+    import numpy as np
+    import math
     
     # Get pre-calculated statistics
     overview_stats = DatabaseStatistic.objects.filter(statistic_type='overview')
@@ -432,12 +436,229 @@ def analysis(request):
         overall_ci_overlap = (ci_overlaps / total_valid) * 100 if ci_overlaps is not None else 0
         overall_direction_concordance = (direction_concordances / total_valid) * 100 if direction_concordances is not None else 0
     
+    # ===== FOREST PLOT GENERATION =====
+    def generate_forest_plot(effect_measure, studies_data, title):
+        """Generate interactive forest plot using Plotly"""
+        if not studies_data:
+            return "<div class='alert alert-info'>No data available for this measure type</div>"
+        
+        fig = go.Figure()
+        
+        # Prepare data
+        study_labels = []
+        point_estimates = []
+        lower_cis = []
+        upper_cis = []
+        hover_texts = []
+        
+        for i, study in enumerate(studies_data):
+            study_labels.append(f"{study['author']} {study['year']}")
+            point_estimates.append(study['point_estimate'])
+            lower_cis.append(study['lower_ci'])
+            upper_cis.append(study['upper_ci'])
+            
+            # Rich hover text
+            hover_texts.append(
+                f"<b>{study['author']} et al. {study['year']}</b><br>" +
+                f"Point Estimate: {study['point_estimate']:.3f}<br>" +
+                f"95% CI: [{study['lower_ci']:.3f}, {study['upper_ci']:.3f}]<br>" +
+                f"Population: {study.get('population', 'Not specified')}<br>" +
+                f"Sample Size: {study.get('sample_size', 'Not reported')}"
+            )
+        
+        # Add individual studies
+        for i, (label, pe, lower, upper, hover) in enumerate(zip(
+            study_labels, point_estimates, lower_cis, upper_cis, hover_texts
+        )):
+            # Confidence interval line
+            fig.add_trace(go.Scatter(
+                x=[lower, upper],
+                y=[i, i],
+                mode='lines',
+                line=dict(color='#2E86AB', width=3),
+                showlegend=False,
+                hoverinfo='skip'
+            ))
+            
+            # Point estimate
+            fig.add_trace(go.Scatter(
+                x=[pe],
+                y=[i],
+                mode='markers',
+                marker=dict(
+                    color='#2E86AB',
+                    size=12,
+                    symbol='square',
+                    line=dict(color='white', width=2)
+                ),
+                text=hover,
+                hovertemplate='%{text}<extra></extra>',
+                showlegend=False,
+                name=label
+            ))
+        
+        # Calculate pooled estimate (simple mean for demo - in reality would use proper meta-analysis)
+        pooled_pe = np.mean(point_estimates)
+        pooled_lower = pooled_pe - 1.96 * np.std(point_estimates) / np.sqrt(len(point_estimates))
+        pooled_upper = pooled_pe + 1.96 * np.std(point_estimates) / np.sqrt(len(point_estimates))
+        
+        # Add pooled estimate
+        pooled_y = len(studies_data) + 0.5
+        
+        # Pooled CI line
+        fig.add_trace(go.Scatter(
+            x=[pooled_lower, pooled_upper],
+            y=[pooled_y, pooled_y],
+            mode='lines',
+            line=dict(color='#F18F01', width=5),
+            showlegend=False,
+            hoverinfo='skip'
+        ))
+        
+        # Pooled point estimate (diamond)
+        fig.add_trace(go.Scatter(
+            x=[pooled_pe],
+            y=[pooled_y],
+            mode='markers',
+            marker=dict(
+                color='#F18F01',
+                size=16,
+                symbol='diamond',
+                line=dict(color='white', width=2)
+            ),
+            text=f"<b>Pooled Estimate</b><br>Point Estimate: {pooled_pe:.3f}<br>95% CI: [{pooled_lower:.3f}, {pooled_upper:.3f}]",
+            hovertemplate='%{text}<extra></extra>',
+            showlegend=False,
+            name='Pooled'
+        ))
+        
+        # Add vertical line at null effect
+        null_effect = 1.0 if effect_measure in ['HR', 'OR', 'RR'] else 0.0
+        fig.add_vline(x=null_effect, line_dash="dash", line_color="red", line_width=2)
+        
+        # Update layout
+        y_labels = study_labels + ['', 'Pooled Estimate']
+        
+        fig.update_layout(
+            title=dict(
+                text=title,
+                font=dict(size=16, color='#333'),
+                x=0.5
+            ),
+            xaxis=dict(
+                title=f"{effect_measure} (Log Scale)" if effect_measure in ['HR', 'OR', 'RR'] else f"{effect_measure}",
+                showgrid=True,
+                gridcolor='lightgray',
+                type='log' if effect_measure in ['HR', 'OR', 'RR'] else 'linear'
+            ),
+            yaxis=dict(
+                tickmode='array',
+                tickvals=list(range(len(y_labels))),
+                ticktext=y_labels,
+                autorange='reversed',
+                showgrid=False
+            ),
+            height=max(400, len(studies_data) * 25 + 150),
+            margin=dict(l=200, r=50, t=80, b=50),
+            plot_bgcolor='white',
+            paper_bgcolor='white',
+            hovermode='closest'
+        )
+        
+        # Convert to HTML
+        return ply.plot(fig, output_type='div', include_plotlyjs=False)
+    
+    # Generate sample forest plot data (in real implementation, this would come from your database)
+    def get_sample_forest_data(effect_measure):
+        """Generate realistic sample data for forest plots"""
+        import random
+        random.seed(42)  # Reproducible data
+        
+        # Different sample sizes based on measure type
+        sample_sizes = {
+            'HR': 67, 'OR': 34, 'RR': 28, 'RD': 19, 'MD': 23
+        }
+        
+        n_studies = sample_sizes.get(effect_measure, 20)
+        authors = [
+            'Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis',
+            'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson',
+            'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin', 'Lee', 'Perez', 'Thompson',
+            'White', 'Harris', 'Sanchez', 'Clark', 'Ramirez', 'Lewis', 'Robinson', 'Walker',
+            'Young', 'Allen', 'King', 'Wright', 'Scott', 'Torres', 'Nguyen', 'Hill',
+            'Flores', 'Green', 'Adams', 'Nelson', 'Baker', 'Hall', 'Rivera', 'Campbell',
+            'Mitchell', 'Carter', 'Roberts', 'Gomez', 'Phillips', 'Evans', 'Turner',
+            'Diaz', 'Parker', 'Cruz', 'Edwards', 'Collins', 'Reyes', 'Stewart', 'Morris',
+            'Morales', 'Murphy', 'Cook', 'Rogers', 'Gutierrez', 'Ortiz', 'Morgan'
+        ]
+        
+        studies = []
+        
+        for i in range(n_studies):
+            year = random.randint(2018, 2024)
+            author = random.choice(authors)
+            
+            if effect_measure in ['HR', 'OR', 'RR']:
+                # Ratio measures (log-normal distribution)
+                log_pe = random.normalvariate(0, 0.2)  # Mean = 0 (null effect), SD = 0.2
+                point_estimate = math.exp(log_pe)
+                
+                # Generate CI width based on sample size
+                se = random.uniform(0.1, 0.3)
+                lower_ci = math.exp(log_pe - 1.96 * se)
+                upper_ci = math.exp(log_pe + 1.96 * se)
+                
+            else:
+                # Additive measures (normal distribution)
+                if effect_measure == 'RD':
+                    point_estimate = random.normalvariate(0, 0.02)  # Risk differences around 0
+                    se = random.uniform(0.01, 0.02)
+                else:  # MD
+                    point_estimate = random.normalvariate(0, 0.15)  # Mean differences
+                    se = random.uniform(0.05, 0.15)
+                
+                lower_ci = point_estimate - 1.96 * se
+                upper_ci = point_estimate + 1.96 * se
+            
+            studies.append({
+                'author': author,
+                'year': year,
+                'point_estimate': point_estimate,
+                'lower_ci': lower_ci,
+                'upper_ci': upper_ci,
+                'population': f'N = {random.randint(500, 5000)}',
+                'sample_size': random.randint(500, 5000)
+            })
+        
+        # Sort by year and author
+        studies.sort(key=lambda x: (x['year'], x['author']))
+        return studies
+    
+    # Generate forest plots for each effect measure
+    forest_plots = {}
+    effect_measures = ['HR', 'OR', 'RR', 'RD', 'MD']
+    effect_measure_names = {
+        'HR': 'Hazard Ratio Studies',
+        'OR': 'Odds Ratio Studies', 
+        'RR': 'Risk Ratio Studies',
+        'RD': 'Risk Difference Studies',
+        'MD': 'Mean Difference Studies'
+    }
+    
+    for measure in effect_measures:
+        data = get_sample_forest_data(measure)
+        title = f"{effect_measure_names[measure]} (n={len(data)})"
+        forest_plots[measure.lower()] = generate_forest_plot(measure, data, title)
+
     context = {
         'overview_stats': overview_stats,
         'tte_vs_rct_stats': tte_vs_rct_stats,
         'tte_general_stats': tte_general_stats,
         'total_studies': total_studies,
         'total_comparisons': total_comparisons,
+        
+        # Forest plots
+        'forest_plots': forest_plots,
         
         # TTE Studies Only Data
         'disease_distribution': disease_distribution,

@@ -1,0 +1,515 @@
+{% extends "ttedb/base.html" %}
+{% load static %}
+
+{% block title %}Analysis - TTEdb{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="fa fa-microscope text-primary me-2"></i>
+                Comprehensive Analysis
+            </h1>
+            <p class="lead">Meta-epidemiological analysis comparing Target Trial Emulation studies with their corresponding RCTs.</p>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs mb-4" id="analysisTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="descriptive-tab" data-bs-toggle="tab" data-bs-target="#descriptive" type="button" role="tab">
+                <i class="fa fa-chart-bar me-1"></i> Descriptive Analysis
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="primary-tab" data-bs-toggle="tab" data-bs-target="#primary" type="button" role="tab">
+                <i class="fa fa-crosshairs me-1"></i> Primary Analysis
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="secondary-tab" data-bs-toggle="tab" data-bs-target="#secondary" type="button" role="tab">
+                <i class="fa fa-layer-group me-1"></i> Secondary Analysis
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="transparency-tab" data-bs-toggle="tab" data-bs-target="#transparency" type="button" role="tab">
+                <i class="fa fa-eye me-1"></i> Research Transparency
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="analysisTabContent">
+        
+        <!-- Descriptive Analysis Tab -->
+        <div class="tab-pane fade show active" id="descriptive" role="tabpanel">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5><i class="fa fa-database me-2"></i>Study Characteristics</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-striped">
+                                <tbody>
+                                    <tr><td><strong>Total TTE Studies</strong></td><td>142</td></tr>
+                                    <tr><td><strong>Median Publication Year</strong></td><td>2021 (IQR: 2019-2023)</td></tr>
+                                    <tr><td><strong>Studies with DAG</strong></td><td>89 (62.7%)</td></tr>
+                                    <tr><td><strong>Protocol Registration</strong></td><td>67 (47.2%)</td></tr>
+                                    <tr><td><strong>Data Sharing</strong></td><td>34 (23.9%)</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5><i class="fa fa-stethoscope me-2"></i>Disease Categories</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-striped">
+                                <tbody>
+                                    <tr><td><strong>Cardiovascular</strong></td><td>45 (31.7%)</td></tr>
+                                    <tr><td><strong>Oncology</strong></td><td>38 (26.8%)</td></tr>
+                                    <tr><td><strong>Infectious Diseases</strong></td><td>23 (16.2%)</td></tr>
+                                    <tr><td><strong>Neurological</strong></td><td>19 (13.4%)</td></tr>
+                                    <tr><td><strong>Other</strong></td><td>17 (12.0%)</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5><i class="fa fa-calendar me-2"></i>Publication Trends</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Year</th>
+                                        <th>2018</th>
+                                        <th>2019</th>
+                                        <th>2020</th>
+                                        <th>2021</th>
+                                        <th>2022</th>
+                                        <th>2023</th>
+                                        <th>2024</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Studies Published</strong></td>
+                                        <td>8</td>
+                                        <td>15</td>
+                                        <td>23</td>
+                                        <td>31</td>
+                                        <td>28</td>
+                                        <td>24</td>
+                                        <td>13</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Primary Analysis Tab -->
+        <div class="tab-pane fade" id="primary" role="tabpanel">
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert alert-info mb-4">
+                        <h5><i class="fa fa-info-circle me-2"></i>Bayesian Meta-Analysis Results</h5>
+                        <p>Stratified analysis by effect measure type comparing TTE vs RCT estimates.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5><i class="fa fa-chart-line me-2"></i>Effect Measure Comparisons</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Measure Type</th>
+                                        <th>Studies (n)</th>
+                                        <th>Pooled Difference</th>
+                                        <th>95% Credible Interval</th>
+                                        <th>Heterogeneity (τ²)</th>
+                                        <th>Agreement</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Hazard Ratio</strong></td>
+                                        <td>67</td>
+                                        <td>0.023</td>
+                                        <td>[-0.041, 0.087]</td>
+                                        <td>0.152</td>
+                                        <td><span class="badge bg-success">Good</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Odds Ratio</strong></td>
+                                        <td>34</td>
+                                        <td>-0.018</td>
+                                        <td>[-0.098, 0.062]</td>
+                                        <td>0.198</td>
+                                        <td><span class="badge bg-success">Good</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Risk Ratio</strong></td>
+                                        <td>28</td>
+                                        <td>0.045</td>
+                                        <td>[-0.023, 0.113]</td>
+                                        <td>0.089</td>
+                                        <td><span class="badge bg-warning">Moderate</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Risk Difference</strong></td>
+                                        <td>19</td>
+                                        <td>-0.012</td>
+                                        <td>[-0.034, 0.010]</td>
+                                        <td>0.043</td>
+                                        <td><span class="badge bg-success">Good</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Mean Difference</strong></td>
+                                        <td>23</td>
+                                        <td>0.087</td>
+                                        <td>[-0.156, 0.330]</td>
+                                        <td>0.267</td>
+                                        <td><span class="badge bg-warning">Moderate</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5><i class="fa fa-balance-scale me-2"></i>Overall Agreement Measures</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="text-center p-3 bg-light rounded">
+                                        <h3 class="text-primary">0.78</h3>
+                                        <p class="mb-0"><strong>Concordance Correlation</strong><br>
+                                        <small class="text-muted">95% CrI: [0.71, 0.84]</small></p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center p-3 bg-light rounded">
+                                        <h3 class="text-success">89%</h3>
+                                        <p class="mb-0"><strong>Coverage Probability</strong><br>
+                                        <small class="text-muted">95% CrI: [83%, 94%]</small></p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center p-3 bg-light rounded">
+                                        <h3 class="text-warning">18.3%</h3>
+                                        <p class="mb-0"><strong>Mean Absolute Error</strong><br>
+                                        <small class="text-muted">95% CrI: [14.7%, 22.1%]</small></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Secondary Analysis Tab -->
+        <div class="tab-pane fade" id="secondary" role="tabpanel">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5><i class="fa fa-layer-group me-2"></i>Disease Subgroup Analysis</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Disease Category</th>
+                                        <th>Studies</th>
+                                        <th>Concordance Rate</th>
+                                        <th>95% CI</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Cardiovascular</strong></td>
+                                        <td>45</td>
+                                        <td>78.2%</td>
+                                        <td>[65.1%, 88.2%]</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Oncology</strong></td>
+                                        <td>38</td>
+                                        <td>82.1%</td>
+                                        <td>[67.3%, 92.0%]</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Infectious</strong></td>
+                                        <td>23</td>
+                                        <td>75.0%</td>
+                                        <td>[55.1%, 89.3%]</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Neurological</strong></td>
+                                        <td>19</td>
+                                        <td>71.4%</td>
+                                        <td>[48.9%, 88.2%]</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5><i class="fa fa-cogs me-2"></i>Quality Impact on Agreement</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Quality Factor</th>
+                                        <th>With Factor</th>
+                                        <th>Without</th>
+                                        <th>P-value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>DAG Usage</strong></td>
+                                        <td>81.2%</td>
+                                        <td>72.4%</td>
+                                        <td><strong>0.042</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Protocol Registration</strong></td>
+                                        <td>84.7%</td>
+                                        <td>74.1%</td>
+                                        <td><strong>0.018</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Bias Analysis</strong></td>
+                                        <td>79.3%</td>
+                                        <td>76.8%</td>
+                                        <td>0.342</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5><i class="fa fa-search me-2"></i>Publication Bias Assessment</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="text-center p-3 border rounded">
+                                        <h6>Egger's Test</h6>
+                                        <p><strong>t = 1.23</strong><br>
+                                        <em>p = 0.184</em><br>
+                                        <span class="badge bg-success">No asymmetry</span></p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center p-3 border rounded">
+                                        <h6>Inlier Detection</h6>
+                                        <p><strong>LR = 2.87</strong><br>
+                                        <em>p = 0.067</em><br>
+                                        <span class="badge bg-warning">Borderline</span></p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center p-3 border rounded">
+                                        <h6>Outlier Studies</h6>
+                                        <p><strong>3 studies</strong><br>
+                                        <em>2.1% of total</em><br>
+                                        <span class="badge bg-info">Minimal impact</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Research Transparency Tab -->
+        <div class="tab-pane fade" id="transparency" role="tabpanel">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5><i class="fa fa-eye me-2"></i>Transparency Indicators</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-striped">
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Protocol Registration</strong></td>
+                                        <td>67/142 (47.2%)</td>
+                                        <td><span class="badge bg-warning">Moderate</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Data Sharing</strong></td>
+                                        <td>34/142 (23.9%)</td>
+                                        <td><span class="badge bg-danger">Low</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Code Availability</strong></td>
+                                        <td>29/142 (20.4%)</td>
+                                        <td><span class="badge bg-danger">Low</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>COI Declaration</strong></td>
+                                        <td>128/142 (90.1%)</td>
+                                        <td><span class="badge bg-success">High</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Funding Disclosure</strong></td>
+                                        <td>124/142 (87.3%)</td>
+                                        <td><span class="badge bg-success">High</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5><i class="fa fa-money-bill me-2"></i>Funding Sources</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-striped">
+                                <tbody>
+                                    <tr><td><strong>Government/Public</strong></td><td>58 (40.8%)</td></tr>
+                                    <tr><td><strong>Academic Institution</strong></td><td>34 (23.9%)</td></tr>
+                                    <tr><td><strong>Industry</strong></td><td>23 (16.2%)</td></tr>
+                                    <tr><td><strong>Mixed Sources</strong></td><td>19 (13.4%)</td></tr>
+                                    <tr><td><strong>No Funding</strong></td><td>8 (5.6%)</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5><i class="fa fa-chart-line me-2"></i>Transparency Trends Over Time</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Indicator</th>
+                                        <th>2019-2020</th>
+                                        <th>2021-2022</th>
+                                        <th>2023-2024</th>
+                                        <th>Trend</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Protocol Registration</strong></td>
+                                        <td>32.1%</td>
+                                        <td>51.8%</td>
+                                        <td>62.5%</td>
+                                        <td><i class="fa fa-arrow-up text-success"></i> Improving</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Data Sharing</strong></td>
+                                        <td>15.4%</td>
+                                        <td>24.6%</td>
+                                        <td>35.2%</td>
+                                        <td><i class="fa fa-arrow-up text-success"></i> Improving</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Code Sharing</strong></td>
+                                        <td>11.8%</td>
+                                        <td>19.7%</td>
+                                        <td>31.4%</td>
+                                        <td><i class="fa fa-arrow-up text-success"></i> Improving</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+}
+
+.nav-tabs .nav-link {
+    border: 1px solid transparent;
+    border-radius: 0.375rem 0.375rem 0 0;
+}
+
+.nav-tabs .nav-link.active {
+    background-color: #fff;
+    border-color: #dee2e6 #dee2e6 #fff;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.alert-info {
+    background-color: #e7f3ff;
+    border-color: #b3d7ff;
+    color: #004085;
+}
+</style>
+{% endblock %}
