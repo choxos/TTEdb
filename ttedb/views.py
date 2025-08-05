@@ -488,13 +488,13 @@ def analysis(request):
             lower_cis.append(study['lower_ci'])
             upper_cis.append(study['upper_ci'])
             
-            # Rich hover text
-            n_comp_text = f" ({study['n_comparisons']} comparisons)" if study.get('n_comparisons', 1) > 1 else ""
+            # Rich hover text for individual data points
             hover_texts.append(
-                f"<b>{study['author']} et al. {study['year']}</b>{n_comp_text}<br>" +
+                f"<b>{study['author']} et al. {study['year']}</b><br>" +
                 f"Point Estimate: {study['point_estimate']:.3f}<br>" +
                 f"95% CI: [{study['lower_ci']:.3f}, {study['upper_ci']:.3f}]<br>" +
-                f"Population: {study.get('population', 'Not specified')}<br>" +
+                f"TTE Estimate: {study.get('tte_estimate', 'N/A')}<br>" +
+                f"RCT Estimate: {study.get('rct_estimate', 'N/A')}<br>" +
                 f"Sample Size: {study.get('sample_size', 'Not reported')}"
             )
         
@@ -641,8 +641,11 @@ def analysis(request):
         ))
         
         # Add vertical line at null effect
-        null_effect = 1.0 if effect_measure in ['HR', 'OR', 'RR'] else 0.0
-        fig.add_vline(x=null_effect, line_dash="dash", line_color="red", line_width=2)
+        # For ratio measures on log scale: null effect is at 0 (since log(1) = 0)
+        # For difference measures on linear scale: null effect is at 0
+        null_effect = 0.0  # Null effect is always 0 (log(1)=0 for ratios, 0 for differences)
+        fig.add_vline(x=null_effect, line_dash="dash", line_color="red", line_width=2,
+                     annotation_text="No Effect", annotation_position="top")
         
         # Update layout
         y_labels = study_labels + ['', 'Pooled Estimate']
@@ -654,10 +657,10 @@ def analysis(request):
                 x=0.5
             ),
             xaxis=dict(
-                title=f"{effect_measure} (Log Scale)" if effect_measure in ['HR', 'OR', 'RR'] else f"{effect_measure}",
+                title=f"{effect_measure} Difference (Log Scale)" if effect_measure in ['HR', 'OR', 'RR'] else f"{effect_measure} Difference",
                 showgrid=True,
                 gridcolor='lightgray',
-                type='log' if effect_measure in ['HR', 'OR', 'RR'] else 'linear'
+                type='linear'  # Data is already log-transformed differences, so use linear scale
             ),
             yaxis=dict(
                 tickmode='array',
@@ -680,62 +683,42 @@ def analysis(request):
     def get_forest_plot_data(effect_measure, real_forest_data=None):
         """Get forest plot data - real data if available, otherwise fallback"""
         if real_forest_data and effect_measure.lower() in real_forest_data:
-            # Use real R analysis data
+            # Use real R analysis data - show individual data points, not aggregated studies
             real_data = real_forest_data[effect_measure.lower()]
-            
-            # Group by study (author + year) to aggregate multiple comparisons per study
-            from collections import defaultdict
-            import statistics
-            
-            grouped_studies = defaultdict(list)
-            
-            # Group entries by study
-            for row in real_data:
-                study_key = f"{row.get('author', 'Unknown')}_{row.get('year', 2020)}"
-                grouped_studies[study_key].append(row)
-            
             studies = []
-            for study_key, study_rows in grouped_studies.items():
-                # If multiple comparisons per study, aggregate them
-                if len(study_rows) > 1:
-                    # Calculate mean effect estimate and confidence intervals
-                    point_estimates = [row['point_estimate'] for row in study_rows]
-                    lower_cis = [row['lower_ci'] for row in study_rows]
-                    upper_cis = [row['upper_ci'] for row in study_rows]
-                    
-                    avg_point = statistics.mean(point_estimates)
-                    avg_lower = statistics.mean(lower_cis)
-                    avg_upper = statistics.mean(upper_cis)
-                    
-                    # Use first row for other data
-                    base_row = study_rows[0]
-                    author_year = f"{base_row.get('author', 'Study')} {base_row.get('year', 2020)} (n={len(study_rows)})"
+            
+            for i, row in enumerate(real_data):
+                # Create unique label for each data point
+                author = row.get('author', f'Study {i+1}')
+                year = row.get('year', 2020)
+                
+                # Add suffix for multiple comparisons from same study
+                study_count = sum(1 for r in real_data[:i+1] 
+                                if r.get('author') == author and r.get('year') == year)
+                
+                if study_count > 1:
+                    data_point_label = f"{author} {year} ({study_count})"
                 else:
-                    # Single comparison per study
-                    base_row = study_rows[0]
-                    avg_point = base_row['point_estimate']
-                    avg_lower = base_row['lower_ci']
-                    avg_upper = base_row['upper_ci']
-                    author_year = f"{base_row.get('author', 'Study')} {base_row.get('year', 2020)}"
+                    data_point_label = f"{author} {year}"
                 
                 studies.append({
-                    'author': base_row.get('author', 'Study'),
-                    'year': base_row.get('year', 2020),
-                    'study_label': author_year,
-                    'point_estimate': avg_point,
-                    'lower_ci': avg_lower,
-                    'upper_ci': avg_upper,
-                    'population': f"N = {base_row.get('sample_size', 1000):,}",
-                    'sample_size': base_row.get('sample_size', 1000),
-                    'tte_estimate': base_row.get('tte_estimate'),
-                    'rct_estimate': base_row.get('rct_estimate'),
-                    'study_id': base_row.get('study_id', f'study_1'),
-                    'target_trial': base_row.get('target_trial_name', 'Target Trial'),
-                    'n_comparisons': len(study_rows)
+                    'author': author,
+                    'year': year,
+                    'study_label': data_point_label,
+                    'point_estimate': row['point_estimate'],
+                    'lower_ci': row['lower_ci'],
+                    'upper_ci': row['upper_ci'],
+                    'population': f"N = {row.get('sample_size', 1000):,}",
+                    'sample_size': row.get('sample_size', 1000),
+                    'tte_estimate': row.get('tte_estimate'),
+                    'rct_estimate': row.get('rct_estimate'),
+                    'study_id': row.get('study_id', f'datapoint_{i+1}'),
+                    'target_trial': row.get('target_trial_name', 'Target Trial'),
+                    'comparison_id': i + 1
                 })
             
-            # Sort by year and author
-            studies.sort(key=lambda x: (x['year'], x['author']))
+            # Sort by year, then author, then comparison
+            studies.sort(key=lambda x: (x['year'], x['author'], x.get('comparison_id', 0)))
             return studies
         else:
             # Fallback to generated data if real data not available
