@@ -558,8 +558,9 @@ def analysis(request):
                 autorange='reversed',
                 showgrid=False
             ),
+            width=1200,
             height=max(400, len(studies_data) * 25 + 150),
-            margin=dict(l=200, r=50, t=80, b=50),
+            margin=dict(l=180, r=20, t=80, b=50),
             plot_bgcolor='white',
             paper_bgcolor='white',
             hovermode='closest'
