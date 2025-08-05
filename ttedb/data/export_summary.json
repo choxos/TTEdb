@@ -1,0 +1,14 @@
+{
+  "export_timestamp": "2025-08-05 01:44:06",
+  "data_source": ["dataset/TTE_Metaresearch_Clean_Dataset - Studies characteristics.csv", "dataset/TTE_Metaresearch_Clean_Dataset - PICOs.csv"],
+  "total_studies": 32,
+  "total_comparisons": 142,
+  "bayesian_analysis_performed": true,
+  "subgroup_analysis_performed": true,
+  "stan_interface": "CmdStanR",
+  "effect_measures": ["MD", "RR", "HR", "SMD", "RD", "OR"],
+  "studies_in_meta_analysis": 167,
+  "files_created": ["ttedb/data/descriptive_results.json", "ttedb/data/forest_plot_data.json", "ttedb/data/meta_analysis_results.json", "ttedb/data/subgroup_analysis_results.json"],
+  "export_type": "comprehensive_bayesian_analysis",
+  "notes": "✅ Comprehensive Bayesian hierarchical meta-analysis | ✅ Subgroup analyses"
+}

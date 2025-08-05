@@ -1,0 +1,68 @@
+{
+  "MD": {
+    "effect_measure": "MD",
+    "n_studies": 15,
+    "pooled_estimate": 0.0014,
+    "ci_lower": -0.6943,
+    "ci_upper": 0.5339,
+    "tau_squared": 0.5744,
+    "tau": 0.7579,
+    "method": "Bayesian hierarchical meta-analysis",
+    "estimation": "CmdStanR with 4 chains, 100K warmup + 100K sampling"
+  },
+  "RR": {
+    "effect_measure": "RR",
+    "n_studies": 51,
+    "pooled_estimate": 0.0843,
+    "ci_lower": -0.0374,
+    "ci_upper": 0.2048,
+    "tau_squared": 0.1564,
+    "tau": 0.3954,
+    "method": "Bayesian hierarchical meta-analysis",
+    "estimation": "CmdStanR with 4 chains, 100K warmup + 100K sampling"
+  },
+  "HR": {
+    "effect_measure": "HR",
+    "n_studies": 80,
+    "pooled_estimate": 0.0287,
+    "ci_lower": -0.0039,
+    "ci_upper": 0.0618,
+    "tau_squared": 0.0152,
+    "tau": 0.1233,
+    "method": "Bayesian hierarchical meta-analysis",
+    "estimation": "CmdStanR with 4 chains, 100K warmup + 100K sampling"
+  },
+  "SMD": {
+    "effect_measure": "SMD",
+    "n_studies": 2,
+    "pooled_estimate": 0.6642,
+    "ci_lower": -0.1542,
+    "ci_upper": 1.4191,
+    "tau_squared": 0.3326,
+    "tau": 0.5767,
+    "method": "Bayesian hierarchical meta-analysis",
+    "estimation": "CmdStanR with 4 chains, 100K warmup + 100K sampling"
+  },
+  "RD": {
+    "effect_measure": "RD",
+    "n_studies": 1,
+    "pooled_estimate": -0.013,
+    "ci_lower": -0.2001,
+    "ci_upper": 0.1741,
+    "tau_squared": 0,
+    "tau": 0,
+    "method": "Single study analysis",
+    "estimation": "Individual study estimate with 95% CI"
+  },
+  "OR": {
+    "effect_measure": "OR",
+    "n_studies": 18,
+    "pooled_estimate": -0.2335,
+    "ci_lower": -0.3675,
+    "ci_upper": -0.0994,
+    "tau_squared": 0.0731,
+    "tau": 0.2704,
+    "method": "Bayesian hierarchical meta-analysis",
+    "estimation": "CmdStanR with 4 chains, 100K warmup + 100K sampling"
+  }
+}

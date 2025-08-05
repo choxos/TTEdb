@@ -1,0 +1,121 @@
+{
+  "overview": {
+    "total_studies": 32,
+    "total_comparisons": 142,
+    "effect_measures": ["MD", "RR", "HR", "SMD", "RD", "OR"],
+    "studies_with_clean_data": 167,
+    "year_range": "2019 - 2024"
+  },
+  "effect_measures": [
+    {
+      "effect_measure": "HR",
+      "n": 80,
+      "percentage": 47.9
+    },
+    {
+      "effect_measure": "RR",
+      "n": 51,
+      "percentage": 30.5
+    },
+    {
+      "effect_measure": "OR",
+      "n": 18,
+      "percentage": 10.8
+    },
+    {
+      "effect_measure": "MD",
+      "n": 15,
+      "percentage": 9
+    },
+    {
+      "effect_measure": "SMD",
+      "n": 2,
+      "percentage": 1.2
+    },
+    {
+      "effect_measure": "RD",
+      "n": 1,
+      "percentage": 0.6
+    }
+  ],
+  "disease_categories": [
+    {
+      "disease_category_clean": "Other",
+      "n": 61,
+      "percentage": 37
+    },
+    {
+      "disease_category_clean": "Cardiovascular",
+      "n": 59,
+      "percentage": 35.8
+    },
+    {
+      "disease_category_clean": "Oncology",
+      "n": 40,
+      "percentage": 24.2
+    },
+    {
+      "disease_category_clean": "Immunology",
+      "n": 4,
+      "percentage": 2.4
+    },
+    {
+      "disease_category_clean": "Neurology",
+      "n": 1,
+      "percentage": 0.6
+    }
+  ],
+  "data_sources": [
+    {
+      "data_source_clean": "Other",
+      "n": 64,
+      "percentage": 38.8
+    },
+    {
+      "data_source_clean": "EHR",
+      "n": 41,
+      "percentage": 24.8
+    },
+    {
+      "data_source_clean": "Claims",
+      "n": 32,
+      "percentage": 19.4
+    },
+    {
+      "data_source_clean": "Registry",
+      "n": 18,
+      "percentage": 10.9
+    },
+    {
+      "data_source_clean": "RCT Data",
+      "n": 10,
+      "percentage": 6.1
+    }
+  ],
+  "temporal_trends": [
+    {
+      "year": 2022,
+      "n": 10
+    },
+    {
+      "year": 2023,
+      "n": 6
+    },
+    {
+      "year": 2024,
+      "n": 6
+    },
+    {
+      "year": 2021,
+      "n": 5
+    },
+    {
+      "year": 2020,
+      "n": 4
+    },
+    {
+      "year": 2019,
+      "n": 1
+    }
+  ]
+}

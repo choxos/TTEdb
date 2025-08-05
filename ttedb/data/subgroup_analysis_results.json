@@ -1,0 +1,86 @@
+{
+  "disease": {
+    "Cardiovascular": {
+      "pooled_estimate": 0.051,
+      "ci_lower": -0.0153,
+      "ci_upper": 0.1175,
+      "n_studies": 59
+    },
+    "Immunology": {
+      "pooled_estimate": 0.3446,
+      "ci_lower": 0.0774,
+      "ci_upper": 0.6119,
+      "n_studies": 4
+    },
+    "Neurology": {
+      "pooled_estimate": 0.106,
+      "ci_lower": -0.3708,
+      "ci_upper": 0.582,
+      "n_studies": 1
+    },
+    "Oncology": {
+      "pooled_estimate": -0.0436,
+      "ci_lower": -0.1313,
+      "ci_upper": 0.0437,
+      "n_studies": 40
+    },
+    "Other": {
+      "pooled_estimate": 0.0179,
+      "ci_lower": -0.0554,
+      "ci_upper": 0.0915,
+      "n_studies": 61
+    }
+  },
+  "data_source": {
+    "Claims": {
+      "pooled_estimate": 0.0111,
+      "ci_lower": -0.075,
+      "ci_upper": 0.0975,
+      "n_studies": 32
+    },
+    "EHR": {
+      "pooled_estimate": -0.0377,
+      "ci_lower": -0.1328,
+      "ci_upper": 0.058,
+      "n_studies": 41
+    },
+    "Other": {
+      "pooled_estimate": 0.0558,
+      "ci_lower": -0.0117,
+      "ci_upper": 0.1233,
+      "n_studies": 64
+    },
+    "RCT Data": {
+      "pooled_estimate": -0.0277,
+      "ci_lower": -0.3127,
+      "ci_upper": 0.2557,
+      "n_studies": 10
+    },
+    "Registry": {
+      "pooled_estimate": 0.0693,
+      "ci_lower": -0.0511,
+      "ci_upper": 0.1898,
+      "n_studies": 18
+    }
+  },
+  "publication_year": {
+    "2019 and earlier": {
+      "pooled_estimate": -0.0291,
+      "ci_lower": -0.3149,
+      "ci_upper": 0.2551,
+      "n_studies": 10
+    },
+    "2020-2021": {
+      "pooled_estimate": 0.0376,
+      "ci_lower": -0.0849,
+      "ci_upper": 0.1595,
+      "n_studies": 16
+    },
+    "2022 and later": {
+      "pooled_estimate": 0.0257,
+      "ci_lower": -0.0205,
+      "ci_upper": 0.0722,
+      "n_studies": 139
+    }
+  }
+}
