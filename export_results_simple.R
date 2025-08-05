@@ -88,30 +88,19 @@ if (!is.null(study_chars) && nrow(study_chars) > 0) {
   # Check what columns are available
   cat("Study characteristics columns:", paste(colnames(study_chars), collapse = ", "), "\n")
   
-  # Basic cleaning with column name flexibility
+  # Basic cleaning with safer column handling
   study_chars_clean <- study_chars %>%
     mutate(
-      # Create year column if it doesn't exist
-      year = case_when(
-        "year" %in% colnames(.) ~ year,
-        "publication_year" %in% colnames(.) ~ publication_year,
-        "Year" %in% colnames(.) ~ Year,
-        TRUE ~ 2020  # Default fallback
-      ),
+      # Use existing year column or create one
+      year = if("year" %in% colnames(.)) year else 2020,
       
-      # Create study_id if it doesn't exist
-      study_id = case_when(
-        "study_id" %in% colnames(.) ~ study_id,
-        "Study_ID" %in% colnames(.) ~ Study_ID,
-        "id" %in% colnames(.) ~ id,
-        TRUE ~ paste("study", row_number())
-      ),
+      # Use existing study_id or create one
+      study_id = if("study_id" %in% colnames(.)) study_id else paste("study", row_number()),
       
-      # Create disease category
+      # Create disease category from available columns
       disease_category_clean = case_when(
-        "disease_category" %in% colnames(.) ~ disease_category,
-        "Disease_Category" %in% colnames(.) ~ Disease_Category,
-        "disease" %in% colnames(.) ~ disease,
+        !is.na(disease_category) ~ as.character(disease_category),
+        !is.na(disease) ~ as.character(disease),
         TRUE ~ "Other"
       )
     ) %>%
@@ -127,24 +116,14 @@ if (!is.null(picos) && nrow(picos) > 0) {
   
   cat("PICO columns:", paste(colnames(picos), collapse = ", "), "\n")
   
-  # Basic PICO cleaning
+  # Basic PICO cleaning with safer column handling
   picos_clean <- picos %>%
     mutate(
-      # Create effect_measure column
-      effect_measure = case_when(
-        "effect_measure" %in% colnames(.) ~ effect_measure,
-        "Effect_Measure" %in% colnames(.) ~ Effect_Measure,
-        "measure" %in% colnames(.) ~ measure,
-        TRUE ~ "HR"  # Default fallback
-      ),
+      # Use existing effect_measure column or create one
+      effect_measure = if("effect_measure" %in% colnames(.)) effect_measure else "HR",
       
-      # Create study_id if it doesn't exist
-      study_id = case_when(
-        "study_id" %in% colnames(.) ~ study_id,
-        "Study_ID" %in% colnames(.) ~ Study_ID,
-        "id" %in% colnames(.) ~ id,
-        TRUE ~ paste("study", row_number())
-      )
+      # Use existing study_id or create one
+      study_id = if("study_id" %in% colnames(.)) study_id else paste("study", row_number())
     ) %>%
     filter(!is.na(effect_measure))
   
