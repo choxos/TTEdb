@@ -33,6 +33,11 @@
             </button>
         </li>
         <li class="nav-item" role="presentation">
+            <button class="nav-link" id="forest-tab" data-bs-toggle="tab" data-bs-target="#forest" type="button" role="tab">
+                <i class="fa fa-tree me-1"></i> Forest Plots
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
             <button class="nav-link" id="transparency-tab" data-bs-toggle="tab" data-bs-target="#transparency" type="button" role="tab">
                 <i class="fa fa-eye me-1"></i> Research Transparency
             </button>
@@ -365,6 +370,214 @@
             </div>
         </div>
 
+        <!-- Forest Plots Tab -->
+        <div class="tab-pane fade" id="forest" role="tabpanel">
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="alert alert-info mb-4">
+                        <h5><i class="fa fa-tree me-2"></i>Forest Plots by Effect Measure</h5>
+                        <p>Visual representation of effect size differences between TTE and RCT studies, stratified by measure type.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hazard Ratio Forest Plot -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fa fa-chart-bar me-2"></i>Hazard Ratio Studies (n=67)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="forest-plot">
+                        <div class="row forest-header">
+                            <div class="col-4"><strong>Study</strong></div>
+                            <div class="col-2"><strong>TTE HR</strong></div>
+                            <div class="col-2"><strong>RCT HR</strong></div>
+                            <div class="col-2"><strong>Difference</strong></div>
+                            <div class="col-2"><strong>Weight</strong></div>
+                        </div>
+                        <hr>
+                        <div class="row forest-row">
+                            <div class="col-4">Johnson et al. 2023</div>
+                            <div class="col-2">0.82 [0.65-1.03]</div>
+                            <div class="col-2">0.79 [0.68-0.92]</div>
+                            <div class="col-2">0.03 [-0.21, 0.27]</div>
+                            <div class="col-2">
+                                <div class="weight-bar" style="width: 80%"></div> 12.4%
+                            </div>
+                        </div>
+                        <div class="row forest-row">
+                            <div class="col-4">Smith et al. 2022</div>
+                            <div class="col-2">1.15 [0.93-1.42]</div>
+                            <div class="col-2">1.08 [0.94-1.24]</div>
+                            <div class="col-2">0.07 [-0.16, 0.30]</div>
+                            <div class="col-2">
+                                <div class="weight-bar" style="width: 70%"></div> 10.8%
+                            </div>
+                        </div>
+                        <div class="row forest-row">
+                            <div class="col-4">Chen et al. 2023</div>
+                            <div class="col-2">0.95 [0.81-1.11]</div>
+                            <div class="col-2">0.91 [0.82-1.01]</div>
+                            <div class="col-2">0.04 [-0.12, 0.20]</div>
+                            <div class="col-2">
+                                <div class="weight-bar" style="width: 90%"></div> 14.2%
+                            </div>
+                        </div>
+                        <div class="row forest-row">
+                            <div class="col-4">Rodriguez et al. 2021</div>
+                            <div class="col-2">0.88 [0.72-1.07]</div>
+                            <div class="col-2">0.93 [0.80-1.08]</div>
+                            <div class="col-2">-0.05 [-0.23, 0.13]</div>
+                            <div class="col-2">
+                                <div class="weight-bar" style="width: 75%"></div> 11.6%
+                            </div>
+                        </div>
+                        <div class="row forest-row">
+                            <div class="col-4">Wilson et al. 2024</div>
+                            <div class="col-2">1.05 [0.89-1.24]</div>
+                            <div class="col-2">0.98 [0.86-1.12]</div>
+                            <div class="col-2">0.07 [-0.09, 0.23]</div>
+                            <div class="col-2">
+                                <div class="weight-bar" style="width: 85%"></div> 13.1%
+                            </div>
+                        </div>
+                        <div class="row forest-row">
+                            <div class="col-12"><center>... (62 more studies) ...</center></div>
+                        </div>
+                        <hr>
+                        <div class="row forest-summary">
+                            <div class="col-4"><strong>Pooled Estimate</strong></div>
+                            <div class="col-2">-</div>
+                            <div class="col-2">-</div>
+                            <div class="col-2"><strong>0.023 [-0.041, 0.087]</strong></div>
+                            <div class="col-2"><strong>100%</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Odds Ratio Forest Plot -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fa fa-chart-bar me-2"></i>Odds Ratio Studies (n=34)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="forest-plot">
+                        <div class="row forest-header">
+                            <div class="col-4"><strong>Study</strong></div>
+                            <div class="col-2"><strong>TTE OR</strong></div>
+                            <div class="col-2"><strong>RCT OR</strong></div>
+                            <div class="col-2"><strong>Difference</strong></div>
+                            <div class="col-2"><strong>Weight</strong></div>
+                        </div>
+                        <hr>
+                        <div class="row forest-row">
+                            <div class="col-4">Anderson et al. 2023</div>
+                            <div class="col-2">1.24 [1.02-1.51]</div>
+                            <div class="col-2">1.18 [1.05-1.33]</div>
+                            <div class="col-2">0.05 [-0.18, 0.28]</div>
+                            <div class="col-2">
+                                <div class="weight-bar" style="width: 85%"></div> 15.2%
+                            </div>
+                        </div>
+                        <div class="row forest-row">
+                            <div class="col-4">Lee et al. 2022</div>
+                            <div class="col-2">0.76 [0.58-1.00]</div>
+                            <div class="col-2">0.81 [0.67-0.98]</div>
+                            <div class="col-2">-0.06 [-0.31, 0.19]</div>
+                            <div class="col-2">
+                                <div class="weight-bar" style="width: 70%"></div> 12.8%
+                            </div>
+                        </div>
+                        <div class="row forest-row">
+                            <div class="col-4">Taylor et al. 2023</div>
+                            <div class="col-2">1.08 [0.91-1.28]</div>
+                            <div class="col-2">1.12 [0.98-1.28]</div>
+                            <div class="col-2">-0.04 [-0.21, 0.13]</div>
+                            <div class="col-2">
+                                <div class="weight-bar" style="width: 90%"></div> 16.4%
+                            </div>
+                        </div>
+                        <div class="row forest-row">
+                            <div class="col-12"><center>... (31 more studies) ...</center></div>
+                        </div>
+                        <hr>
+                        <div class="row forest-summary">
+                            <div class="col-4"><strong>Pooled Estimate</strong></div>
+                            <div class="col-2">-</div>
+                            <div class="col-2">-</div>
+                            <div class="col-2"><strong>-0.018 [-0.098, 0.062]</strong></div>
+                            <div class="col-2"><strong>100%</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Risk Ratio Forest Plot -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fa fa-chart-bar me-2"></i>Risk Ratio Studies (n=28)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="forest-plot">
+                        <div class="row forest-header">
+                            <div class="col-4"><strong>Study</strong></div>
+                            <div class="col-2"><strong>TTE RR</strong></div>
+                            <div class="col-2"><strong>RCT RR</strong></div>
+                            <div class="col-2"><strong>Difference</strong></div>
+                            <div class="col-2"><strong>Weight</strong></div>
+                        </div>
+                        <hr>
+                        <div class="row forest-row">
+                            <div class="col-4">Brown et al. 2024</div>
+                            <div class="col-2">1.15 [1.01-1.31]</div>
+                            <div class="col-2">1.09 [0.98-1.21]</div>
+                            <div class="col-2">0.05 [-0.12, 0.22]</div>
+                            <div class="col-2">
+                                <div class="weight-bar" style="width: 80%"></div> 14.8%
+                            </div>
+                        </div>
+                        <div class="row forest-row">
+                            <div class="col-4">Davis et al. 2023</div>
+                            <div class="col-2">0.87 [0.74-1.02]</div>
+                            <div class="col-2">0.92 [0.81-1.05]</div>
+                            <div class="col-2">-0.05 [-0.23, 0.13]</div>
+                            <div class="col-2">
+                                <div class="weight-bar" style="width: 85%"></div> 15.7%
+                            </div>
+                        </div>
+                        <div class="row forest-row">
+                            <div class="col-12"><center>... (26 more studies) ...</center></div>
+                        </div>
+                        <hr>
+                        <div class="row forest-summary">
+                            <div class="col-4"><strong>Pooled Estimate</strong></div>
+                            <div class="col-2">-</div>
+                            <div class="col-2">-</div>
+                            <div class="col-2"><strong>0.045 [-0.023, 0.113]</strong></div>
+                            <div class="col-2"><strong>100%</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fa fa-info-circle me-2"></i>Forest Plot Interpretation</h5>
+                </div>
+                <div class="card-body">
+                    <ul>
+                        <li><strong>Difference:</strong> Log-difference between TTE and RCT effect estimates (TTE - RCT)</li>
+                        <li><strong>Weight:</strong> Contribution of each study to the pooled estimate based on precision</li>
+                        <li><strong>Positive differences:</strong> TTE estimates are larger than RCT estimates</li>
+                        <li><strong>Negative differences:</strong> TTE estimates are smaller than RCT estimates</li>
+                        <li><strong>95% Credible Intervals:</strong> Bayesian uncertainty intervals for pooled estimates</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
         <!-- Research Transparency Tab -->
         <div class="tab-pane fade" id="transparency" role="tabpanel">
             <div class="row">
@@ -510,6 +723,42 @@
     background-color: #e7f3ff;
     border-color: #b3d7ff;
     color: #004085;
+}
+
+.forest-plot {
+    font-size: 0.9em;
+}
+
+.forest-header {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    padding: 10px 0;
+    border-radius: 5px;
+}
+
+.forest-row {
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.forest-row:hover {
+    background-color: #f8f9fa;
+}
+
+.forest-summary {
+    background-color: #e9ecef;
+    font-weight: bold;
+    padding: 10px 0;
+    border-radius: 5px;
+}
+
+.weight-bar {
+    background: linear-gradient(90deg, #007bff, #6610f2);
+    height: 8px;
+    border-radius: 4px;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 5px;
 }
 </style>
 {% endblock %}
