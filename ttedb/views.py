@@ -492,7 +492,7 @@ def analysis(request):
                     line=dict(color='white', width=2)
                 ),
                 text=hover,
-                hovertemplate='%{text}<extra></extra>',
+                hoverinfo='text',
                 showlegend=False,
                 name=label
             ))
@@ -527,7 +527,7 @@ def analysis(request):
                 line=dict(color='white', width=2)
             ),
             text=f"<b>Pooled Estimate</b><br>Point Estimate: {pooled_pe:.3f}<br>95% CI: [{pooled_lower:.3f}, {pooled_upper:.3f}]",
-            hovertemplate='%{text}<extra></extra>',
+            hoverinfo='text',
             showlegend=False,
             name='Pooled'
         ))
