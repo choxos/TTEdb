@@ -39,6 +39,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
+    'csp.middleware.CSPMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -62,7 +63,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'ttedb_project.context_processors.settings',
+                'ttedb_project.context_processors.django_settings',
             ],
         },
     },
@@ -161,6 +162,30 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+
+# Content Security Policy configuration
+CSP_DEFAULT_SRC = ["'self'"]
+CSP_SCRIPT_SRC = [
+    "'self'", 
+    "'unsafe-inline'", 
+    "https://cdn.plot.ly", 
+    "https://cdn.jsdelivr.net",
+    "https://www.googletagmanager.com"
+]
+CSP_STYLE_SRC = [
+    "'self'", 
+    "'unsafe-inline'", 
+    "https://cdn.jsdelivr.net",
+    "https://fonts.googleapis.com",
+    "https://cdnjs.cloudflare.com"
+]
+CSP_FONT_SRC = [
+    "'self'", 
+    "https://cdnjs.cloudflare.com",
+    "https://fonts.gstatic.com"
+]
+CSP_IMG_SRC = ["'self'", "data:", "https:"]
+CSP_CONNECT_SRC = ["'self'"]
 
 # Logging configuration
 LOGGING = {

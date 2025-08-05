@@ -3,7 +3,7 @@ Context processors for TTEdb project.
 """
 from django.conf import settings
 
-def settings(request):
+def django_settings(request):
     """
     Make certain settings available in templates.
     """
