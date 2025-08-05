@@ -799,12 +799,12 @@ def analysis(request):
     forest_plots = {}
     effect_measures = ['HR', 'OR', 'RR', 'RD', 'MD', 'SMD']
     effect_measure_names = {
-        'HR': 'Hazard Ratio Studies',
-        'OR': 'Odds Ratio Studies', 
-        'RR': 'Risk Ratio Studies',
-        'RD': 'Risk Difference Studies',
-        'MD': 'Mean Difference Studies',
-        'SMD': 'Standardized Mean Difference Studies'
+        'HR': 'Hazard Ratio Data Points',
+        'OR': 'Odds Ratio Data Points', 
+        'RR': 'Risk Ratio Data Points',
+        'RD': 'Risk Difference Data Points',
+        'MD': 'Mean Difference Data Points',
+        'SMD': 'Standardized Mean Difference Data Points'
     }
     
     for measure in effect_measures:
