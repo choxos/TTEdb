@@ -11,6 +11,7 @@ urlpatterns = [
     path('learning-hub/', views.learning_hub, name='learning_hub'),
     path('analysis/', views.analysis, name='analysis'),
     path('about/', views.about, name='about'),
+    path('api-docs/', views.api_documentation, name='api_documentation'),
     
     # Detail pages
     path('tte/<slug:slug>/', views.tte_detail, name='tte_detail'),

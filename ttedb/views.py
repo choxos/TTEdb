@@ -959,6 +959,15 @@ def about(request):
     return render(request, 'ttedb/about.html', context)
 
 
+def api_documentation(request):
+    """API documentation page view"""
+    context = {
+        'page_title': 'API Documentation',
+        'page_description': 'TTEdb API Documentation - Access TTE studies, Bayesian meta-analysis results, and research data programmatically through our comprehensive REST API.',
+    }
+    return render(request, 'ttedb/api_documentation.html', context)
+
+
 def search(request):
     """Advanced search with PICO elements and filters"""
     # Get search parameters

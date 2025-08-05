@@ -3,6 +3,10 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count
+from django.http import JsonResponse
+from django.conf import settings
+import json
+import os
 from .models import TTEStudy, PICOComparison, LearningResource, DatabaseStatistic
 from .serializers import (
     TTEStudySerializer, PICOComparisonSerializer, 
@@ -52,7 +56,8 @@ class DatabaseStatisticViewSet(viewsets.ReadOnlyModelViewSet):
 @api_view(['GET'])
 def statistics_overview(request):
     """API endpoint for overview statistics"""
-    stats = {
+    # Get database statistics
+    db_stats = {
         'total_studies': TTEStudy.objects.count(),
         'total_comparisons': PICOComparison.objects.count(),
         'total_learning_resources': LearningResource.objects.count(),
@@ -66,7 +71,19 @@ def statistics_overview(request):
             TTEStudy.objects.values('data_type').annotate(count=Count('id')).order_by('-count')
         ),
     }
-    return Response(stats)
+    
+    # Add Bayesian analysis statistics if available
+    export_data = load_analysis_json('export_summary.json')
+    if export_data:
+        db_stats['bayesian_analysis'] = {
+            'last_updated': export_data.get('export_timestamp'),
+            'total_studies_analyzed': export_data.get('total_studies'),
+            'total_comparisons_analyzed': export_data.get('total_comparisons'),
+            'effect_measures': export_data.get('effect_measures'),
+            'analysis_type': export_data.get('export_type')
+        }
+    
+    return Response(db_stats)
 
 
 @api_view(['GET'])
@@ -96,4 +113,107 @@ def search_api(request):
         'resources': LearningResourceSerializer(resources, many=True).data,
     }
     
-    return Response({'results': results}) 
+    return Response({'results': results})
+
+
+# =============================================================================
+# BAYESIAN ANALYSIS API ENDPOINTS
+# =============================================================================
+
+def load_analysis_json(filename):
+    """Helper function to load JSON files from ttedb/data directory"""
+    file_path = os.path.join(settings.BASE_DIR, 'ttedb', 'data', filename)
+    try:
+        with open(file_path, 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return None
+    except json.JSONDecodeError:
+        return None
+
+
+@api_view(['GET'])
+def export_summary(request):
+    """API endpoint for export summary information"""
+    data = load_analysis_json('export_summary.json')
+    if data is None:
+        return Response({'error': 'Export summary data not available'}, status=404)
+    return Response(data)
+
+
+@api_view(['GET'])
+def meta_analysis_results(request):
+    """API endpoint for Bayesian meta-analysis results"""
+    data = load_analysis_json('meta_analysis_results.json')
+    if data is None:
+        return Response({'error': 'Meta-analysis results not available'}, status=404)
+    return Response(data)
+
+
+@api_view(['GET'])
+def descriptive_results(request):
+    """API endpoint for descriptive analysis results"""
+    data = load_analysis_json('descriptive_results.json')
+    if data is None:
+        return Response({'error': 'Descriptive results not available'}, status=404)
+    return Response(data)
+
+
+@api_view(['GET'])
+def subgroup_analysis_results(request):
+    """API endpoint for subgroup analysis results"""
+    data = load_analysis_json('subgroup_analysis_results.json')
+    if data is None:
+        return Response({'error': 'Subgroup analysis results not available'}, status=404)
+    return Response(data)
+
+
+@api_view(['GET'])
+def forest_plot_data(request):
+    """API endpoint for forest plot data"""
+    data = load_analysis_json('forest_plot_data.json')
+    if data is None:
+        return Response({'error': 'Forest plot data not available'}, status=404)
+    
+    # Optional filtering by effect measure
+    effect_measure = request.GET.get('effect_measure')
+    if effect_measure and data:
+        filtered_data = {k: v for k, v in data.items() if k.upper() == effect_measure.upper()}
+        return Response(filtered_data)
+    
+    return Response(data)
+
+
+@api_view(['GET'])
+def bayesian_analysis_overview(request):
+    """API endpoint for comprehensive Bayesian analysis overview"""
+    # Load all analysis files
+    export_data = load_analysis_json('export_summary.json')
+    meta_data = load_analysis_json('meta_analysis_results.json')
+    descriptive_data = load_analysis_json('descriptive_results.json')
+    subgroup_data = load_analysis_json('subgroup_analysis_results.json')
+    
+    overview = {
+        'analysis_available': any([export_data, meta_data, descriptive_data, subgroup_data]),
+        'export_summary': export_data,
+        'meta_analysis_summary': {
+            'available_measures': list(meta_data.keys()) if meta_data else [],
+            'total_measures': len(meta_data) if meta_data else 0
+        },
+        'descriptive_summary': {
+            'overview': descriptive_data.get('overview') if descriptive_data else None
+        },
+        'subgroup_summary': {
+            'available_groupings': list(subgroup_data.keys()) if subgroup_data else [],
+            'total_subgroups': sum(len(v) for v in subgroup_data.values()) if subgroup_data else 0
+        },
+        'endpoints': {
+            'export_summary': '/api/analysis/export-summary/',
+            'meta_analysis': '/api/analysis/meta-analysis/',
+            'descriptive': '/api/analysis/descriptive/',
+            'subgroup': '/api/analysis/subgroup/',
+            'forest_plot_data': '/api/analysis/forest-plot-data/',
+        }
+    }
+    
+    return Response(overview) 

@@ -1,0 +1,364 @@
+{% extends "ttedb/base.html" %}
+{% load static %}
+
+{% block title %}API Documentation{% endblock %}
+{% block meta_description %}TTEdb API Documentation - Access TTE studies, Bayesian meta-analysis results, and research data programmatically through our comprehensive REST API.{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Hero Section -->
+    <div class="ttedb-hero-section">
+        <div class="container">
+            <div class="ttedb-hero-content">
+                <h1 class="ttedb-hero-title">
+                    <i class="fas fa-code me-3"></i>TTEdb API
+                </h1>
+                <p class="ttedb-hero-subtitle">
+                    Comprehensive REST API for accessing TTE studies, Bayesian meta-analysis results, and research data
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- API Overview -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-info-circle me-2"></i>API Overview
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Base URL</h5>
+                                <code>{{ request.scheme }}://{{ request.get_host }}/api/</code>
+                                
+                                <h5 class="mt-4">Response Format</h5>
+                                <p>All API responses are in JSON format with appropriate HTTP status codes.</p>
+                                
+                                <h5 class="mt-4">Authentication</h5>
+                                <p>Currently, all endpoints are public and require no authentication.</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Rate Limiting</h5>
+                                <p>No rate limiting currently applied, but please be respectful with your requests.</p>
+                                
+                                <h5 class="mt-4">CORS</h5>
+                                <p>Cross-origin requests are supported for web applications.</p>
+                                
+                                <h5 class="mt-4">Versioning</h5>
+                                <p>Current API version: v1 (no versioning prefix required)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Core Data Endpoints -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-database me-2"></i>Core Data Endpoints
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Endpoint</th>
+                                        <th>Method</th>
+                                        <th>Description</th>
+                                        <th>Parameters</th>
+                                        <th>Try It</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>/api/studies/</code></td>
+                                        <td><span class="badge bg-primary">GET</span></td>
+                                        <td>List all TTE studies with filtering and search</td>
+                                        <td>year, disease_category, data_type, search</td>
+                                        <td><a href="/api/studies/" target="_blank" class="btn btn-sm btn-outline-primary">Try</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/api/studies/{slug}/</code></td>
+                                        <td><span class="badge bg-primary">GET</span></td>
+                                        <td>Get detailed information about a specific study</td>
+                                        <td>-</td>
+                                        <td><a href="/api/studies/" target="_blank" class="btn btn-sm btn-outline-primary">Browse</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/api/pico-comparisons/</code></td>
+                                        <td><span class="badge bg-primary">GET</span></td>
+                                        <td>List all PICO comparisons with filtering</td>
+                                        <td>effect_measure, outcome_type, search</td>
+                                        <td><a href="/api/pico-comparisons/" target="_blank" class="btn btn-sm btn-outline-primary">Try</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/api/learning-resources/</code></td>
+                                        <td><span class="badge bg-primary">GET</span></td>
+                                        <td>List all learning resources</td>
+                                        <td>resource_type, difficulty_level</td>
+                                        <td><a href="/api/learning-resources/" target="_blank" class="btn btn-sm btn-outline-primary">Try</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/api/statistics/overview/</code></td>
+                                        <td><span class="badge bg-primary">GET</span></td>
+                                        <td>Get database statistics and overview</td>
+                                        <td>-</td>
+                                        <td><a href="/api/statistics/overview/" target="_blank" class="btn btn-sm btn-outline-primary">Try</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/api/search/</code></td>
+                                        <td><span class="badge bg-primary">GET</span></td>
+                                        <td>Global search across all data types</td>
+                                        <td>q (query string)</td>
+                                        <td><a href="/api/search/?q=diabetes" target="_blank" class="btn btn-sm btn-outline-primary">Try</a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bayesian Analysis Endpoints -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card border-success">
+                    <div class="card-header bg-success text-white">
+                        <h3 class="card-title mb-0">
+                            <i class="fas fa-chart-line me-2"></i>Bayesian Meta-Analysis Endpoints
+                            <span class="badge bg-light text-success ms-2">NEW</span>
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            These endpoints provide access to comprehensive Bayesian hierarchical meta-analysis results, including pooled estimates, credible intervals, and heterogeneity measures.
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Endpoint</th>
+                                        <th>Method</th>
+                                        <th>Description</th>
+                                        <th>Parameters</th>
+                                        <th>Try It</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>/api/analysis/overview/</code></td>
+                                        <td><span class="badge bg-primary">GET</span></td>
+                                        <td>Overview of all available Bayesian analysis results</td>
+                                        <td>-</td>
+                                        <td><a href="/api/analysis/overview/" target="_blank" class="btn btn-sm btn-outline-success">Try</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/api/analysis/export-summary/</code></td>
+                                        <td><span class="badge bg-primary">GET</span></td>
+                                        <td>Summary of the latest analysis export</td>
+                                        <td>-</td>
+                                        <td><a href="/api/analysis/export-summary/" target="_blank" class="btn btn-sm btn-outline-success">Try</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/api/analysis/meta-analysis/</code></td>
+                                        <td><span class="badge bg-primary">GET</span></td>
+                                        <td>Bayesian meta-analysis results for all effect measures</td>
+                                        <td>-</td>
+                                        <td><a href="/api/analysis/meta-analysis/" target="_blank" class="btn btn-sm btn-outline-success">Try</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/api/analysis/descriptive/</code></td>
+                                        <td><span class="badge bg-primary">GET</span></td>
+                                        <td>Comprehensive descriptive statistics of the dataset</td>
+                                        <td>-</td>
+                                        <td><a href="/api/analysis/descriptive/" target="_blank" class="btn btn-sm btn-outline-success">Try</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/api/analysis/subgroup/</code></td>
+                                        <td><span class="badge bg-primary">GET</span></td>
+                                        <td>Subgroup analysis results by disease and data source</td>
+                                        <td>-</td>
+                                        <td><a href="/api/analysis/subgroup/" target="_blank" class="btn btn-sm btn-outline-success">Try</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/api/analysis/forest-plot-data/</code></td>
+                                        <td><span class="badge bg-primary">GET</span></td>
+                                        <td>Individual study data points for forest plots</td>
+                                        <td>effect_measure (optional filter)</td>
+                                        <td><a href="/api/analysis/forest-plot-data/" target="_blank" class="btn btn-sm btn-outline-success">Try</a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Example Usage -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-code me-2"></i>Example Usage
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>JavaScript (Fetch API)</h5>
+<pre><code class="language-javascript">// Get all studies from 2023
+fetch('/api/studies/?year=2023')
+  .then(response => response.json())
+  .then(data => console.log(data));
+
+// Get Bayesian meta-analysis results
+fetch('/api/analysis/meta-analysis/')
+  .then(response => response.json())
+  .then(data => {
+    console.log('HR pooled estimate:', 
+      data.HR.pooled_estimate);
+  });</code></pre>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Python (requests)</h5>
+<pre><code class="language-python">import requests
+
+# Get database statistics
+response = requests.get(
+  '{{ request.scheme }}://{{ request.get_host }}/api/statistics/overview/'
+)
+stats = response.json()
+
+# Get forest plot data for HR
+response = requests.get(
+  '{{ request.scheme }}://{{ request.get_host }}/api/analysis/forest-plot-data/?effect_measure=HR'
+)
+forest_data = response.json()</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Schema -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-table me-2"></i>Response Schemas
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Meta-Analysis Result Schema</h5>
+<pre><code class="language-json">{
+  "MD": {
+    "n_studies": 15,
+    "pooled_estimate": 0.004,
+    "ci_lower": -0.666,
+    "ci_upper": 0.533,
+    "tau_squared": 0.562,
+    "tau": 0.75,
+    "method": "Bayesian hierarchical model",
+    "estimation": "CmdStanR"
+  },
+  "HR": { ... },
+  "RR": { ... }
+}</code></pre>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Study Schema</h5>
+<pre><code class="language-json">{
+  "id": 1,
+  "slug": "study-name-2023",
+  "first_author": "Author Name",
+  "year": 2023,
+  "disease": "Disease Name",
+  "disease_category": "Category",
+  "data_type": "Claims",
+  "institution_type": "Academic",
+  "target_trial_name": "Trial Name",
+  "created_at": "2024-01-01T00:00:00Z"
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status and Support -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">
+                            <i class="fas fa-heartbeat me-2"></i>API Status
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-success me-2">Live</span>
+                            <span>All endpoints operational</span>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                Last updated: <span id="last-updated">Loading...</span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">
+                            <i class="fas fa-question-circle me-2"></i>Support
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <p>For API support or feature requests:</p>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-envelope me-2"></i>ahmad.pub@gmail.com</li>
+                            <li><i class="fas fa-globe me-2"></i><a href="{% url 'ttedb:about' %}">About Page</a></li>
+                            <li><i class="fab fa-github me-2"></i><a href="https://github.com/choxos/TTEdb" target="_blank">GitHub Repository</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Load and display last updated timestamp
+fetch('/api/analysis/export-summary/')
+  .then(response => response.json())
+  .then(data => {
+    if (data.export_timestamp) {
+      document.getElementById('last-updated').textContent = data.export_timestamp;
+    }
+  })
+  .catch(() => {
+    document.getElementById('last-updated').textContent = 'Unknown';
+  });
+</script>
+{% endblock %}
