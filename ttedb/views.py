@@ -637,7 +637,7 @@ def analysis(request):
         
         # Different sample sizes based on measure type
         sample_sizes = {
-            'HR': 67, 'OR': 34, 'RR': 28, 'RD': 19, 'MD': 23
+            'HR': 67, 'OR': 34, 'RR': 28, 'RD': 19, 'MD': 23, 'SMD': 31
         }
         
         n_studies = sample_sizes.get(effect_measure, 20)
@@ -674,6 +674,9 @@ def analysis(request):
                 if effect_measure == 'RD':
                     point_estimate = random.normalvariate(0, 0.02)  # Risk differences around 0
                     se = random.uniform(0.01, 0.02)
+                elif effect_measure == 'SMD':
+                    point_estimate = random.normalvariate(0, 0.3)  # Standardized mean differences
+                    se = random.uniform(0.1, 0.25)  # Standard error for SMD
                 else:  # MD
                     point_estimate = random.normalvariate(0, 0.15)  # Mean differences
                     se = random.uniform(0.05, 0.15)
@@ -697,13 +700,14 @@ def analysis(request):
     
     # Generate forest plots for each effect measure
     forest_plots = {}
-    effect_measures = ['HR', 'OR', 'RR', 'RD', 'MD']
+    effect_measures = ['HR', 'OR', 'RR', 'RD', 'MD', 'SMD']
     effect_measure_names = {
         'HR': 'Hazard Ratio Studies',
         'OR': 'Odds Ratio Studies', 
         'RR': 'Risk Ratio Studies',
         'RD': 'Risk Difference Studies',
-        'MD': 'Mean Difference Studies'
+        'MD': 'Mean Difference Studies',
+        'SMD': 'Standardized Mean Difference Studies'
     }
     
     for measure in effect_measures:

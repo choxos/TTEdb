@@ -167,13 +167,13 @@
                 <div class="col-md-6">
                     <div class="card mb-4">
                         <div class="card-header">
-                            <h5><i class="fa fa-chart-line me-2"></i>Additive Measures (RD, MD)</h5>
+                            <h5><i class="fa fa-chart-line me-2"></i>Additive Measures (RD, MD, SMD)</h5>
                             <small class="text-muted">Linear-scale analysis of difference measures</small>
                         </div>
                         <div class="card-body">
                             <table class="table table-striped">
                                 <tbody>
-                                    <tr><td><strong>Studies Included</strong></td><td>42 comparisons</td></tr>
+                                    <tr><td><strong>Studies Included</strong></td><td>73 comparisons</td></tr>
                                     <tr><td><strong>Pooled Difference</strong></td><td>0.043 (95% CrI: -0.012, 0.098)</td></tr>
                                     <tr><td><strong>Heterogeneity (τ)</strong></td><td>0.187 (95% CrI: 0.134, 0.254)</td></tr>
                                     <tr><td><strong>Probability |difference| > 0.1</strong></td><td>0.31</td></tr>
@@ -374,6 +374,17 @@
                 </div>
             </div>
             
+            <!-- Standardized Mean Difference Forest Plot -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fa fa-chart-line me-2"></i>Standardized Mean Difference Studies (n=31)</h5>
+                    <small class="text-muted">Linear-scale visualization of effect size measures</small>
+                </div>
+                <div class="card-body">
+                    {{ forest_plots.smd|safe }}
+                </div>
+            </div>
+            
             <!-- Interpretation Guide -->
             <div class="card">
                 <div class="card-header">
@@ -391,12 +402,13 @@
                             </ul>
                         </div>
                         <div class="col-md-6">
-                            <h6>Difference Measures (RD, MD)</h6>
+                            <h6>Difference Measures (RD, MD, SMD)</h6>
                             <ul>
                                 <li>Displayed on linear scale</li>
                                 <li>Null effect line at 0.0</li>
                                 <li>Positive values indicate higher TTE estimates</li>
                                 <li>Negative values indicate lower TTE estimates</li>
+                                <li><strong>SMD interpretation:</strong> ±0.2 small, ±0.5 medium, ±0.8 large effect</li>
                             </ul>
                         </div>
                     </div>
